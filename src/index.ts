@@ -4,6 +4,7 @@ import { ClientToServerEvents, ServerToClientEvents, IrcMessage } from './socket
 import express from 'express'
 import { createServer } from "http";
 import { Server } from "socket.io";
+const cors = require('cors')
 
 const app = express()
 const httpServer = createServer(app)
@@ -44,6 +45,14 @@ client.addListener('error', (message) => {
 
 // http
 
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', '*')
+  res.setHeader('Access-Control-Allow-Headers', '*')
+  console.log('WWW: %s %s %s', req.method, req.originalUrl, req.ip)
+  next()
+})
+app.use(cors())
 app.get('/messages', (req, res) => {
   res.end(JSON.stringify(messageRobin))
 })
