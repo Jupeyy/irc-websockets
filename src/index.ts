@@ -1,11 +1,12 @@
 import irc = require('irc')
 import { Socket } from 'socket.io'
 import { ClientToServerEvents, ServerToClientEvents, IrcMessage } from './socket.io'
-
+import express from 'express'
 import { createServer } from "http";
 import { Server } from "socket.io";
 
-const httpServer = createServer();
+const app = express()
+const httpServer = createServer(app)
 const io = new Server(httpServer, {
   cors: {
     origin: "*"
@@ -13,6 +14,16 @@ const io = new Server(httpServer, {
 })
 
 require('dotenv').config()
+
+// log of last 10 messages
+const messageRobin: IrcMessage[] = []
+
+const logMessage = (msg: IrcMessage): void => {
+  messageRobin.push(msg)
+  while (messageRobin.length > 10) {
+    messageRobin.shift()
+  }
+}
 
 if (!process.env.IRC_CHANNEL) {
 	console.log('Error: IRC_CHANNEL is not set! check your .env file')
@@ -31,6 +42,12 @@ client.addListener('error', (message) => {
     console.log('error: ', message)
 })
 
+// http
+
+app.get('/messages', (req, res) => {
+  res.end(JSON.stringify(messageRobin))
+})
+
 // ws
 
 io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>): void => {
@@ -42,11 +59,14 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
       console.log(`[*] message from ${ipAddr} ${userAgent}`)
       console.log(`    ${message.message}`)
       client.say(`#${process.env.IRC_CHANNEL}`, message.message)
+      logMessage(message)
     })
 
     client.addListener(`message#${process.env.IRC_CHANNEL}`, (from, message) => {
-        console.log(from + ' => #yourchannel: ' + message)
-        socket.emit('message', { from: from, message: message })
+      console.log(from + ' => #yourchannel: ' + message)
+      const ircMessage = { from: from, message: message }
+      logMessage(ircMessage)
+      socket.emit('message', ircMessage)
     })
 })
 
