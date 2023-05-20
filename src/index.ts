@@ -59,6 +59,13 @@ app.get('/messages', (req, res) => {
 
 // ws
 
+client.addListener(`message#${process.env.IRC_CHANNEL}`, (from, message) => {
+  console.log(from + ' => #yourchannel: ' + message)
+  const ircMessage = { from: from, message: message }
+  logMessage(ircMessage)
+  io.emit('message', ircMessage)
+})
+
 io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>): void => {
     const ipAddr = socket.client.conn.remoteAddress
     const userAgent = socket.handshake.headers['user-agent']
@@ -69,13 +76,7 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
       console.log(`    ${message.message}`)
       client.say(`#${process.env.IRC_CHANNEL}`, message.message)
       logMessage(message)
-    })
-
-    client.addListener(`message#${process.env.IRC_CHANNEL}`, (from, message) => {
-      console.log(from + ' => #yourchannel: ' + message)
-      const ircMessage = { from: from, message: message }
-      logMessage(ircMessage)
-      socket.emit('message', ircMessage)
+      io.emit('message', message)
     })
 })
 
