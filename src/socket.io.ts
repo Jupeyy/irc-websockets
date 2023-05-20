@@ -1,8 +1,13 @@
 import { Socket } from 'socket.io'
 
+export interface IrcMessage {
+    from: string,
+    message: string,
+}
+
 export interface ServerToClientEvents {
     // irc-websockets
-    message: (message: string) => void
+    message: (message: IrcMessage) => void
 }
 
 export interface ClientToServerEvents {
@@ -10,5 +15,5 @@ export interface ClientToServerEvents {
     connection: (socket: Socket) => void
 
     // irc-websockets
-    message: (message: string) => void
+    message: (message: IrcMessage) => void
 }
