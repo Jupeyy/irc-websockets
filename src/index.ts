@@ -110,6 +110,17 @@ client.addListener('error', (message) => {
     console.log('error: ', message)
 })
 
+const logoutUser = (user: User) => {
+  console.log(`[*] logging out ${user.username}`)
+  user.loggedIn = false
+  user.socket.emit(
+    'logout',
+    {
+      message: 'logged out'
+    }
+  )
+}
+
 // http
 
 app.use(bodyParser.json())
@@ -149,6 +160,18 @@ const checkAdminAuth = (req: Request, res: Response): boolean => {
   return true
 }
 
+// curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer youradmintoken" --data '{"required": true }' http://localhost:6969/admin/logout_all
+app.post('/admin/logout_all', (req: Request, res: Response) => {
+  if (!checkAdminAuth(req, res)) {
+    return
+  }
+  console.log(`[*] admin logged out all users`)
+  Object.values(users).forEach((user) => logoutUser(user))
+  res.send({
+    message: 'OK'
+  })
+})
+
 // curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer youradmintoken" --data '{"required": true }' http://localhost:6969/admin/password
 app.post('/admin/password', (req: Request, res: Response) => {
   if (!checkAdminAuth(req, res)) {
@@ -174,6 +197,9 @@ app.post('/admin/password', (req: Request, res: Response) => {
 const checkAuth = (message: IrcMessage): boolean => {
   const user = getUserByName(message.from)
   if (!user) {
+    return false
+  }
+  if (!user.loggedIn) {
     return false
   }
   return user.sessionToken === message.token
@@ -251,10 +277,13 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
       )
     })
     socket.on('message', (message: IrcMessage): void => {
-      if(useAccounts() && checkAuth(message)) {
-        console.log(`[!] WARNING invalid token from ${ipAddr} ${userAgent}`)
-        return
+      if(useAccounts()) {
+        if (!checkAuth(message)) {
+          console.log(`[!] WARNING invalid token from ${ipAddr} ${userAgent}`)
+          return
+        }
       }
+      console.log("use accounts " +  useAccounts())
       console.log(`[*] message from ${ipAddr} ${userAgent}`)
       const messageStr = `<${message.from}> ${message.message}`
       console.log(`    ${messageStr}`)
