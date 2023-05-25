@@ -59,16 +59,6 @@ const getUserBySocket = (socket: Socket): User | null => {
   // return users.find((user) => user.loggedIn && user.socket.id === socket.id) || null
 }
 
-// log of last 10 messages
-const messageRobin: IrcMessage[] = []
-
-const logMessage = (msg: IrcMessage): void => {
-  messageRobin.push(msg)
-  while (messageRobin.length > 10) {
-    messageRobin.shift()
-  }
-}
-
 if (!process.env.IRC_CHANNEL) {
 	console.log('Error: IRC_CHANNEL is not set! check your .env file')
 	process.exit(1)
@@ -88,6 +78,22 @@ if (!process.env.ADMIN_TOKEN) {
 if (process.env.ADMIN_TOKEN === 'xxx') {
   console.log('Error: using the default ADMIN_TOKEN is not allowed')
   process.exit(1)
+}
+if (!process.env.BACKLOG_SIZE) {
+	console.log('Error: BACKLOG_SIZE is not set! check your .env file')
+	process.exit(1)
+}
+
+
+// log of last BACKLOG_SIZE messages
+const BACKLOG_SIZE = parseInt(process.env.BACKLOG_SIZE, 10)
+const messageRobin: IrcMessage[] = []
+
+const logMessage = (msg: IrcMessage): void => {
+  messageRobin.push(msg)
+  while (messageRobin.length > BACKLOG_SIZE) {
+    messageRobin.shift()
+  }
 }
 
 interface Config {
