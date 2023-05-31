@@ -208,7 +208,11 @@ const checkAuth = (message: IrcMessage): boolean => {
   if (!user.loggedIn) {
     return false
   }
-  return user.sessionToken === message.token
+  if (user.sessionToken !== message.token) {
+    console.log(`[!] Wrong token expected='${user.sessionToken}' got='${message.token}'`)
+    return false
+  }
+  return true
 }
 
 client.addListener(`message#${process.env.IRC_CHANNEL}`, (from, message) => {
@@ -289,7 +293,6 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
           return
         }
       }
-      console.log("use accounts " +  useAccounts())
       console.log(`[*] message from ${ipAddr} ${userAgent}`)
       const messageStr = `<${message.from}> ${message.message}`
       console.log(`    ${messageStr}`)
