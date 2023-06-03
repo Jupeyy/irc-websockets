@@ -146,6 +146,9 @@ app.use(cors())
 app.get('/messages', (req, res) => {
   res.end(JSON.stringify(messageRobin))
 })
+app.get('/users', (req, res) => {
+  res.end(JSON.stringify(users))
+})
 
 const checkAdminAuth = (req: Request, res: Response): boolean => {
   const authHeader = req.headers.authorization
