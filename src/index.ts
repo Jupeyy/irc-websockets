@@ -147,7 +147,7 @@ app.get('/messages', (req, res) => {
   res.end(JSON.stringify(messageRobin))
 })
 app.get('/users', (req, res) => {
-  res.end(JSON.stringify(users))
+  res.end(JSON.stringify(Object.values(users).map((user) => user.username)))
 })
 
 const checkAdminAuth = (req: Request, res: Response): boolean => {
@@ -241,6 +241,7 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
       const user = getUserBySocket(socket)
       if (user) {
         console.log(`[*] '${user.username}' left`)
+        io.emit('userLeave', user.username)
       } else {
         console.log(`[*] leave before login ${userAgent}`)
       }
@@ -279,6 +280,7 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
       user.username = auth.username
       user.loggedIn = true
       console.log(`[*] '${user.username}' logged in`)
+      io.emit('userJoin', user.username)
       socket.emit(
         'authResponse',
         {
