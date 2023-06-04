@@ -220,7 +220,11 @@ const checkAuth = (message: IrcMessage): boolean => {
 
 client.addListener(`message#${process.env.IRC_CHANNEL}`, (from, message) => {
   console.log(from + ' => #yourchannel: ' + message)
-  const ircMessage = { from: from, message: message }
+  const ircMessage = {
+    from: from,
+    message: message,
+    date: new Date().toUTCString()
+  }
   logMessage(ircMessage)
   io.emit('message', ircMessage)
 })
