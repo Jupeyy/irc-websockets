@@ -354,7 +354,7 @@ connectedIrcChannels.forEach((connection: ChannelMapping) => {
       server: connection.irc.serverName,
       date: new Date().toUTCString()
     }
-    logMessage(connection.irc.serverName, connection.irc.channel, ircMessage)
+    logMessage(connection.discord.server, connection.discord.channel, ircMessage)
     io.emit('message', ircMessage)
   })
 })
