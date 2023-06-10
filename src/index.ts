@@ -35,7 +35,8 @@ interface User {
   sessionToken: string,
   socket: Socket,
   loggedIn: boolean,
-  activeChannel: string
+  activeChannel: string,
+  activeServer: string
 }
 interface UserList {
   [index: string]: User
@@ -85,26 +86,110 @@ if (!process.env.BACKLOG_SIZE) {
 	process.exit(1)
 }
 
+interface ChannelMapping {
+  irc: {
+    serverIp: string,
+    serverName: string,
+    channel: string,
+  },
+  discord: {
+    server: string,
+    channel: string
+  }
+}
+
+// TODO: this should be a json not tracked in git
+const connectedIrcChannels: ChannelMapping[] = [
+  {
+    irc: {
+      serverIp: 'stockholm.se.quakenet.org',
+      serverName: 'quakenet',
+      channel: 'ddnet'
+    },
+    discord: {
+      server: 'ddnet',
+      channel: 'developer'
+    }
+  },
+  {
+    irc: {
+      serverIp: 'stockholm.se.quakenet.org',
+      serverName: 'quakenet',
+      channel: 'ddnet-off-topic'
+    },
+    discord: {
+      server: 'ddnet',
+      channel: 'off-topic'
+    }
+  },
+  {
+    irc: {
+      serverIp: 'stockholm.se.quakenet.org',
+      serverName: 'quakenet',
+      channel: 'ddnet-test'
+    },
+    discord: {
+      server: 'test',
+      channel: 'test'
+    }
+  }
+]
+
+const getMappingByDiscord = (discordServer: string, discordChannel: string): ChannelMapping | null => {
+  return connectedIrcChannels.filter((mapping: ChannelMapping) => {
+    return mapping.discord.server === discordServer && mapping.discord.channel === discordChannel
+  })[0] || null
+}
+
+const isValidDiscordChannel = (discordServer: string, discordChannel: string): boolean => {
+  const matches = connectedIrcChannels.filter((mapping: ChannelMapping) => {
+    return mapping.discord.server === discordServer && mapping.discord.channel === discordChannel
+  })
+  return matches.length === 1
+}
+
+if (connectedIrcChannels.filter((entry) => entry.irc.channel === process.env.IRC_CHANNEL).length === 0) {
+  console.log(`[*] adding custom channel '${process.env.IRC_CHANNEL}'`)
+  connectedIrcChannels.push(
+    {
+      irc: {
+        serverIp: 'stockholm.se.quakenet.org',
+        serverName: 'quakenet',
+        channel: process.env.IRC_CHANNEL
+      },
+      discord: {
+        server: 'unknown',
+        channel: 'unknown'
+      }
+    }
+  )
+}
+
+const activeIrcChannels = (): string[] => {
+  return connectedIrcChannels.map((entry) => entry.irc.channel)
+}
 
 // log of last BACKLOG_SIZE messages
 const BACKLOG_SIZE = parseInt(process.env.BACKLOG_SIZE, 10)
 const messageRobin: Record<string, IrcMessage[]> = {}
 
-const logMessage = (channel: string, msg: IrcMessage): void => {
-  if (!messageRobin[channel]) {
-    messageRobin[channel] = []
+const logMessage = (server: string, channel: string, msg: IrcMessage): void => {
+  const channelIdentifier = `${server}#${channel}`
+  if (!messageRobin[channelIdentifier]) {
+    messageRobin[channelIdentifier] = []
   }
-  messageRobin[channel].push(msg)
-  while (messageRobin[channel].length > BACKLOG_SIZE) {
-    messageRobin[channel].shift()
+  messageRobin[channelIdentifier].push(msg)
+  while (messageRobin[channelIdentifier].length > BACKLOG_SIZE) {
+    messageRobin[channelIdentifier].shift()
   }
 }
 
-const getMessages = (channel: string): IrcMessage[] => {
-  if (!messageRobin[channel]) {
+const getMessages = (server: string, channel: string): IrcMessage[] => {
+  const channelIdentifier = `${server}#${channel}`
+  if (!messageRobin[channelIdentifier]) {
     return []
   }
-  return messageRobin[channel]
+  return messageRobin[channelIdentifier]
 }
 
 interface Config {
@@ -120,8 +205,17 @@ const useAccounts = (): boolean => {
 }
 
 const client = new irc.Client(process.env.IRC_SERVER, 'ws-client', {
-	channels: [`#${process.env.IRC_CHANNEL}`],
+	channels: activeIrcChannels().map((channel) => `#${channel}`),
 })
+
+const sendIrc = (ircServer: string, ircChannel: string, message: string): boolean => {
+  if (ircServer !== 'quakenet') {
+    console.log(`[!] failed to send to unsupported irc ircServer '${ircServer}'`)
+    return false
+  }
+  client.say(`#${ircChannel}`, message)
+  return true
+}
 
 client.addListener('error', (message) => {
     console.log('error: ', message)
@@ -154,8 +248,8 @@ app.use((req, res, next) => {
   next()
 })
 app.use(cors())
-app.get('/:channel/messages', (req, res) => {
-  res.end(JSON.stringify(getMessages(req.params.channel)))
+app.get('/:server/:channel/messages', (req, res) => {
+  res.end(JSON.stringify(getMessages(req.params.server, req.params.channel)))
 })
 app.get('/users', (req, res) => {
   res.end(JSON.stringify(Object.values(users).map((user) => user.username)))
@@ -229,41 +323,40 @@ const checkAuth = (message: IrcMessage): boolean => {
   return true
 }
 
-const joinChannel = (socket: Socket, channel: string, _password: string = ''): boolean => {
-  const user = users[socket.id]
+const joinChannel = (socket: Socket, channel: string, server: string, _password: string = ''): boolean => {
+  const user: User = users[socket.id]
   if (!user) {
     return false
   }
   if (!user.loggedIn) {
     return false
   }
-  // TODO: unhardcode this
-  if (!['ddnet', 'developer', 'teeworlds'].includes(channel)) {
-    console.log(`[!] illegal channel name requested '${channel}'`)
+  if (!isValidDiscordChannel(server, channel)) {
+    console.log(`[!] illegal channel name requested '${server}#${channel}'`)
     return false
   }
   // TODO: we should probably disconenct
   //       all other channels now
   //       maybe except the channel with the socket id
   user.activeChannel = channel
+  user.activeServer = server
   socket.join(channel)
   return true
 }
 
-const getActiveChannel = (): string => {
-  return 'developer'
-}
-
-client.addListener(`message#${process.env.IRC_CHANNEL}`, (from, message) => {
-  console.log(from + ' => #yourchannel: ' + message)
-  const ircMessage = {
-    from: from,
-    message: message,
-    channel: getActiveChannel(),
-    date: new Date().toUTCString()
-  }
-  logMessage(getActiveChannel(), ircMessage)
-  io.emit('message', ircMessage)
+connectedIrcChannels.forEach((connection: ChannelMapping) => {
+  client.addListener(`message#${connection.irc.channel}`, (from, message) => {
+    console.log(from + ' => #yourchannel: ' + message)
+    const ircMessage = {
+      from: from,
+      message: message,
+      channel: connection.irc.channel,
+      server: connection.irc.serverName,
+      date: new Date().toUTCString()
+    }
+    logMessage(connection.irc.serverName, connection.irc.channel, ircMessage)
+    io.emit('message', ircMessage)
+  })
 })
 
 io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>): void => {
@@ -276,7 +369,8 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
       sessionToken: generateToken(32),
       socket: socket,
       loggedIn: false,
-      activeChannel: '_connecting'
+      activeChannel: '_connecting',
+      activeServer: '_connecting'
     }
     users[socket.id] = user
 
@@ -292,7 +386,7 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
     })
 
     socket.on('joinChannel', (join: JoinChannel): void => {  
-      joinChannel(socket, join.channel, join.password)
+      joinChannel(socket, join.channel, join.server, join.password)
     })
 
     socket.on('authRequest', (auth: AuthRequest): void => {
@@ -326,7 +420,7 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
       }
       user.username = auth.username
       user.loggedIn = true
-      if (!joinChannel(socket, auth.channel)) {
+      if (!joinChannel(socket, auth.channel, auth.server)) {
         socket.emit(
           'authResponse',
           {
@@ -367,11 +461,21 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
         console.log(`[!] user '${user.username}' tried to to send in channel '${message.channel}' but is in channel '${user.activeChannel}'`)
         return
       }
-      console.log(`[*] message from ${ipAddr} ${userAgent}`)
+      if (user.activeServer !== message.server) {
+        console.log(`[!] user '${user.username}' tried to to send in server '${message.server}' but is in server '${user.activeServer}'`)
+        return
+      }
       const messageStr = `<${message.from}> ${message.message}`
-      console.log(`    ${messageStr}`)
-      client.say(`#${process.env.IRC_CHANNEL}`, messageStr)
-      logMessage(getActiveChannel(), message)
+      console.log(`[*][${message.server}][${message.channel}] ${messageStr}`)
+      const mapping: ChannelMapping | null = getMappingByDiscord(message.server, message.channel)
+      if (!mapping) {
+        console.log(`[!] invalid discord mapping '${message.server}#${message.channel}'`)
+        return
+      }
+      if (!sendIrc(mapping.irc.serverName, mapping.irc.channel, messageStr)) {
+        return
+      }
+      logMessage(message.server, message.channel, message)
       io.to(user.activeChannel).emit('message', message)
     })
 })
