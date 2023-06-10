@@ -1,6 +1,6 @@
 import irc = require('irc')
 import { Socket } from 'socket.io'
-import { ClientToServerEvents, ServerToClientEvents, IrcMessage, AuthRequest, AuthResponse } from './socket.io'
+import { ClientToServerEvents, ServerToClientEvents, IrcMessage, AuthRequest, AuthResponse, JoinChannel } from './socket.io'
 import express, { Request, Response } from 'express'
 import { createServer } from "http";
 import { Server } from "socket.io";
@@ -34,7 +34,8 @@ interface User {
   username: string,
   sessionToken: string,
   socket: Socket,
-  loggedIn: boolean
+  loggedIn: boolean,
+  activeChannel: string
 }
 interface UserList {
   [index: string]: User
@@ -228,6 +229,27 @@ const checkAuth = (message: IrcMessage): boolean => {
   return true
 }
 
+const joinChannel = (socket: Socket, channel: string, _password: string = ''): boolean => {
+  const user = users[socket.id]
+  if (!user) {
+    return false
+  }
+  if (!user.loggedIn) {
+    return false
+  }
+  // TODO: unhardcode this
+  if (!['ddnet', 'developer', 'teeworlds'].includes(channel)) {
+    console.log(`[!] illegal channel name requested '${channel}'`)
+    return false
+  }
+  // TODO: we should probably disconenct
+  //       all other channels now
+  //       maybe except the channel with the socket id
+  user.activeChannel = channel
+  socket.join(channel)
+  return true
+}
+
 const getActiveChannel = (): string => {
   return 'developer'
 }
@@ -237,6 +259,7 @@ client.addListener(`message#${process.env.IRC_CHANNEL}`, (from, message) => {
   const ircMessage = {
     from: from,
     message: message,
+    channel: getActiveChannel(),
     date: new Date().toUTCString()
   }
   logMessage(getActiveChannel(), ircMessage)
@@ -244,6 +267,7 @@ client.addListener(`message#${process.env.IRC_CHANNEL}`, (from, message) => {
 })
 
 io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>): void => {
+    socket.join('_connecting')
     const ipAddr = socket.client.conn.remoteAddress
     const userAgent = socket.handshake.headers['user-agent']
     console.log(`[*] connect ${ipAddr} ${userAgent}`)
@@ -251,7 +275,8 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
       username: 'connecting',
       sessionToken: generateToken(32),
       socket: socket,
-      loggedIn: false
+      loggedIn: false,
+      activeChannel: '_connecting'
     }
     users[socket.id] = user
 
@@ -264,6 +289,10 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
         console.log(`[*] leave before login ${userAgent}`)
       }
       delete users[socket.id]
+    })
+
+    socket.on('joinChannel', (join: JoinChannel): void => {  
+      joinChannel(socket, join.channel, join.password)
     })
 
     socket.on('authRequest', (auth: AuthRequest): void => {
@@ -297,6 +326,19 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
       }
       user.username = auth.username
       user.loggedIn = true
+      if (!joinChannel(socket, auth.channel)) {
+        socket.emit(
+          'authResponse',
+          {
+            username: auth.username,
+            token: '',
+            success: false,
+            message: 'failed to join channel'
+          }
+        )
+        user.loggedIn = false
+        return
+      }
       console.log(`[*] '${user.username}' logged in`)
       io.emit('userJoin', user.username)
       socket.emit(
@@ -316,12 +358,21 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
           return
         }
       }
+      const user = getUserBySocket(socket)
+      if (!user) {
+        console.log(`[!] WARNING socket without user tried to msg ${ipAddr} ${userAgent}`)
+        return
+      }
+      if (user.activeChannel !== message.channel) {
+        console.log(`[!] user '${user.username}' tried to to send in channel '${message.channel}' but is in channel '${user.activeChannel}'`)
+        return
+      }
       console.log(`[*] message from ${ipAddr} ${userAgent}`)
       const messageStr = `<${message.from}> ${message.message}`
       console.log(`    ${messageStr}`)
       client.say(`#${process.env.IRC_CHANNEL}`, messageStr)
       logMessage(getActiveChannel(), message)
-      io.emit('message', message)
+      io.to(user.activeChannel).emit('message', message)
     })
 })
 
