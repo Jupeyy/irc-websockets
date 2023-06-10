@@ -87,13 +87,23 @@ if (!process.env.BACKLOG_SIZE) {
 
 // log of last BACKLOG_SIZE messages
 const BACKLOG_SIZE = parseInt(process.env.BACKLOG_SIZE, 10)
-const messageRobin: IrcMessage[] = []
+const messageRobin: Record<string, IrcMessage[]> = {}
 
-const logMessage = (msg: IrcMessage): void => {
-  messageRobin.push(msg)
-  while (messageRobin.length > BACKLOG_SIZE) {
-    messageRobin.shift()
+const logMessage = (channel: string, msg: IrcMessage): void => {
+  if (!messageRobin[channel]) {
+    messageRobin[channel] = []
   }
+  messageRobin[channel].push(msg)
+  while (messageRobin[channel].length > BACKLOG_SIZE) {
+    messageRobin[channel].shift()
+  }
+}
+
+const getMessages = (channel: string): IrcMessage[] => {
+  if (!messageRobin[channel]) {
+    return []
+  }
+  return messageRobin[channel]
 }
 
 interface Config {
@@ -143,8 +153,8 @@ app.use((req, res, next) => {
   next()
 })
 app.use(cors())
-app.get('/messages', (req, res) => {
-  res.end(JSON.stringify(messageRobin))
+app.get('/:channel/messages', (req, res) => {
+  res.end(JSON.stringify(getMessages(req.params.channel)))
 })
 app.get('/users', (req, res) => {
   res.end(JSON.stringify(Object.values(users).map((user) => user.username)))
@@ -218,6 +228,10 @@ const checkAuth = (message: IrcMessage): boolean => {
   return true
 }
 
+const getActiveChannel = (): string => {
+  return 'developer'
+}
+
 client.addListener(`message#${process.env.IRC_CHANNEL}`, (from, message) => {
   console.log(from + ' => #yourchannel: ' + message)
   const ircMessage = {
@@ -225,7 +239,7 @@ client.addListener(`message#${process.env.IRC_CHANNEL}`, (from, message) => {
     message: message,
     date: new Date().toUTCString()
   }
-  logMessage(ircMessage)
+  logMessage(getActiveChannel(), ircMessage)
   io.emit('message', ircMessage)
 })
 
@@ -306,7 +320,7 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
       const messageStr = `<${message.from}> ${message.message}`
       console.log(`    ${messageStr}`)
       client.say(`#${process.env.IRC_CHANNEL}`, messageStr)
-      logMessage(message)
+      logMessage(getActiveChannel(), message)
       io.emit('message', message)
     })
 })
