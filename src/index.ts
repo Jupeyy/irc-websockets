@@ -178,8 +178,12 @@ const activeIrcChannels = (): string[] => {
 const BACKLOG_SIZE = parseInt(process.env.BACKLOG_SIZE, 10)
 const messageRobin: Record<string, IrcMessage[]> = {}
 
-const logMessage = (server: string, channel: string, msg: IrcMessage): void => {
-  const channelIdentifier = `${server}#${channel}`
+const getChannelUid = (mapping: ChannelMapping): string => {
+  return `${mapping.discord.server}#${mapping.discord.channel}`
+}
+
+const logMessage = (discordServer: string, discordChannel: string, msg: IrcMessage): void => {
+  const channelIdentifier = `${discordServer}#${discordChannel}`
   if (!messageRobin[channelIdentifier]) {
     messageRobin[channelIdentifier] = []
   }
@@ -189,8 +193,8 @@ const logMessage = (server: string, channel: string, msg: IrcMessage): void => {
   }
 }
 
-const getMessages = (server: string, channel: string): IrcMessage[] => {
-  const channelIdentifier = `${server}#${channel}`
+const getMessages = (discordServer: string, discordChannel: string): IrcMessage[] => {
+  const channelIdentifier = `${discordServer}#${discordChannel}`
   if (!messageRobin[channelIdentifier]) {
     return []
   }
@@ -331,7 +335,7 @@ const checkAuth = (message: IrcMessage): boolean => {
   return true
 }
 
-const joinChannel = (socket: Socket, channel: string, server: string, _password: string = ''): boolean => {
+const joinChannel = (socket: Socket, discordChannel: string, discordServer: string, _password: string = ''): boolean => {
   const user: User = users[socket.id]
   if (!user) {
     return false
@@ -339,16 +343,20 @@ const joinChannel = (socket: Socket, channel: string, server: string, _password:
   if (!user.loggedIn) {
     return false
   }
-  if (!isValidDiscordChannel(server, channel)) {
-    console.log(`[!] illegal channel name requested '${server}#${channel}'`)
+  const mapping: ChannelMapping | null = getMappingByDiscord(discordServer, discordChannel)
+  if (!mapping) {
+    console.log(`[!] invalid discord mapping '${discordServer}#${discordChannel}'`)
     return false
   }
-  // TODO: we should probably disconenct
-  //       all other channels now
-  //       maybe except the channel with the socket id
-  user.activeChannel = channel
-  user.activeServer = server
-  socket.join(channel)
+  user.activeChannel = discordChannel
+  user.activeServer = discordServer
+  socket.rooms.forEach((room) => {
+    if (room !== socket.id) {
+      socket.leave(room)
+    }
+  })
+  socket.join(socket.id)
+  socket.join(getChannelUid(mapping))
   return true
 }
 
@@ -363,7 +371,7 @@ connectedIrcChannels.forEach((connection: ChannelMapping) => {
       date: new Date().toUTCString()
     }
     logMessage(connection.discord.server, connection.discord.channel, ircMessage)
-    io.emit('message', ircMessage)
+    io.to(getChannelUid(connection)).emit('message', ircMessage)
   })
 })
 
@@ -394,7 +402,21 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
     })
 
     socket.on('joinChannel', (join: JoinChannel): void => {  
-      joinChannel(socket, join.channel, join.server, join.password)
+      if (!joinChannel(socket, join.channel, join.server, join.password)) {
+        socket.emit('joinChannelResponse', {
+          message: 'failed to join channel',
+          success: false,
+          server: join.server,
+          channel: join.channel
+        })
+      } else {
+        socket.emit('joinChannelResponse', {
+          message: '',
+          success: true,
+          server: join.server,
+          channel: join.channel
+        })
+      }
     })
 
     socket.on('authRequest', (auth: AuthRequest): void => {
@@ -484,7 +506,7 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
         return
       }
       logMessage(message.server, message.channel, message)
-      io.to(user.activeChannel).emit('message', message)
+      io.to(getChannelUid(mapping)).emit('message', message)
     })
 })
 
