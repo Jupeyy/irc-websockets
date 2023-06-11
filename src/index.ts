@@ -165,6 +165,11 @@ if (connectedIrcChannels.filter((entry) => entry.irc.channel === process.env.IRC
   )
 }
 
+const getDiscordChannels = (discordServerName: string): string[] => {
+  const serverEntries = connectedIrcChannels.filter((entry) => entry.discord.server === discordServerName)
+  return serverEntries.map((entry) => entry.discord.channel)
+}
+
 const activeIrcChannels = (): string[] => {
   return connectedIrcChannels.map((entry) => entry.irc.channel)
 }
@@ -250,6 +255,9 @@ app.use((req, res, next) => {
 app.use(cors())
 app.get('/:server/:channel/messages', (req, res) => {
   res.end(JSON.stringify(getMessages(req.params.server, req.params.channel)))
+})
+app.get('/:server/channels', (req, res) => {
+  res.end(JSON.stringify(getDiscordChannels(req.params.server)))
 })
 app.get('/users', (req, res) => {
   res.end(JSON.stringify(Object.values(users).map((user) => user.username)))
