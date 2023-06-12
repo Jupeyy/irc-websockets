@@ -1,6 +1,6 @@
 import irc = require('irc')
 import { Socket } from 'socket.io'
-import { ClientToServerEvents, ServerToClientEvents, IrcMessage, AuthRequest, AuthResponse, JoinChannel } from './socket.io'
+import { ClientToServerEvents, ServerToClientEvents, IrcMessage, AuthRequest, AuthResponse, JoinChannel, TypingInfo, TypingState } from './socket.io'
 import express, { Request, Response } from 'express'
 import { createServer } from "http";
 import { Server } from "socket.io";
@@ -36,7 +36,8 @@ interface User {
   socket: Socket,
   loggedIn: boolean,
   activeChannel: string,
-  activeServer: string
+  activeServer: string,
+  isTyping: boolean
 }
 interface UserList {
   [index: string]: User
@@ -260,6 +261,15 @@ app.use(cors())
 app.get('/:server/:channel/messages', (req, res) => {
   res.end(JSON.stringify(getMessages(req.params.server, req.params.channel)))
 })
+app.get('/:server/:channel/typers', (req, res) => {
+  res.end(
+    JSON.stringify(
+      Object.values(users)
+        .filter((user) => user.isTyping && user.activeChannel == req.params.channel && user.activeServer === req.params.server)
+        .map((user) => user.username)
+    )
+  )
+})
 app.get('/:server/channels', (req, res) => {
   res.end(JSON.stringify(getDiscordChannels(req.params.server)))
 })
@@ -335,6 +345,22 @@ const checkAuth = (message: IrcMessage): boolean => {
   return true
 }
 
+const sendTyping = (user: User, typing: boolean, server: string, channel: string) => {
+  user.isTyping = typing
+  const mapping: ChannelMapping | null = getMappingByDiscord(server, channel)
+  if (!mapping) {
+    console.log(`[!] invalid discord mapping '${server}#${channel}'`)
+    return
+  }
+  const typingState: TypingState = {
+    names: Object.values(users)
+      .filter((user) => user.isTyping && user.activeChannel === channel && user.activeServer === server)
+      .map((user) => user.username),
+    channel: channel
+  }
+  io.to(getChannelUid(mapping)).emit('typingUsers', typingState)
+}
+
 const joinChannel = (socket: Socket, discordChannel: string, discordServer: string, _password: string = ''): boolean => {
   const user: User = users[socket.id]
   if (!user) {
@@ -348,6 +374,7 @@ const joinChannel = (socket: Socket, discordChannel: string, discordServer: stri
     console.log(`[!] invalid discord mapping '${discordServer}#${discordChannel}'`)
     return false
   }
+  sendTyping(user, false, user.activeServer, user.activeChannel)
   user.activeChannel = discordChannel
   user.activeServer = discordServer
   socket.rooms.forEach((room) => {
@@ -386,7 +413,8 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
       socket: socket,
       loggedIn: false,
       activeChannel: '_connecting',
-      activeServer: '_connecting'
+      activeServer: '_connecting',
+      isTyping: false
     }
     users[socket.id] = user
 
@@ -417,6 +445,32 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
           channel: join.channel
         })
       }
+    })
+
+    socket.on('typingInfo', (typingInfo: TypingInfo) => {
+      const user = getUserBySocket(socket)
+      if (!user) {
+        console.log(`[!] WARNING socket without user tried to type ${ipAddr} ${userAgent}`)
+        return
+      }
+      if (user.activeChannel !== typingInfo.channel) {
+        console.log(`[!] user '${user.username}' tried to type in channel '${typingInfo.channel}' but is in channel '${user.activeChannel}'`)
+        return
+      }
+      if (user.activeServer !== typingInfo.server) {
+        console.log(`[!] user '${user.username}' tried to type in server '${typingInfo.server}' but is in server '${user.activeServer}'`)
+        return
+      }
+      if(useAccounts()) {
+        if (!user.loggedIn) {
+          console.log(`[!] WARNING invalid token from ${ipAddr} ${userAgent}`)
+          return
+        }
+      }
+      // TODO: store last typing info update
+      //       and "timeout" typing if the user
+      //       stops sending typing state
+      sendTyping(user, typingInfo.isTyping, typingInfo.server, typingInfo.channel)
     })
 
     socket.on('authRequest', (auth: AuthRequest): void => {
@@ -488,11 +542,11 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
         return
       }
       if (user.activeChannel !== message.channel) {
-        console.log(`[!] user '${user.username}' tried to to send in channel '${message.channel}' but is in channel '${user.activeChannel}'`)
+        console.log(`[!] user '${user.username}' tried to send in channel '${message.channel}' but is in channel '${user.activeChannel}'`)
         return
       }
       if (user.activeServer !== message.server) {
-        console.log(`[!] user '${user.username}' tried to to send in server '${message.server}' but is in server '${user.activeServer}'`)
+        console.log(`[!] user '${user.username}' tried to send in server '${message.server}' but is in server '${user.activeServer}'`)
         return
       }
       const messageStr = `<${message.from}> ${message.message}`
