@@ -33,8 +33,8 @@ getConnectedIrcChannels().forEach((connection: ChannelMapping) => {
     const ircMessage = {
       from: from,
       message: message,
-      channel: connection.irc.channel,
-      server: connection.irc.serverName,
+      channel: connection.discord.channel,
+      server: connection.discord.server,
       date: new Date().toUTCString()
     }
     addMessage(connection, ircMessage)
