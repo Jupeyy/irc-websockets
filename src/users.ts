@@ -17,7 +17,7 @@ interface UserList {
 const users: UserList = {}
 
 /**
- * 
+ *
  * @returns array of connect User objects
  */
 export const getUsers = () => {
