@@ -8,15 +8,37 @@ import { User, getUserBySocket, getUsers } from "../users"
 
 export const sendTyping = (user: User, typing: boolean, server: string, channel: string) => {
   user.isTyping = typing
+  if (typing) {
+    user.lastTyping = new Date()
+  }
   const mapping: ChannelMapping | null = getMappingByDiscord(server, channel)
   if (!mapping) {
     console.log(`[!] invalid discord mapping '${server}#${channel}'`)
     return
   }
+
+  const typingUsers: string[] = []
+
+  Object.values(getUsers()).forEach((user) => {
+    const diff: number = new Date().valueOf() - user.lastTyping.valueOf()
+    // TODO: this should be done in a OnTick function
+    //       otherwise typing users wont disapear if nobody else starts
+    //       but its kinda okay because even if we are alone
+    //       and start typing it sends a typing update to us
+    //       with a empty user list
+    //       so bugged typing users will be cleared as soon as we start typing
+    if (diff > 3000) {
+      user.isTyping = false
+    }
+    if (user.isTyping
+        && user.activeChannel == channel
+        && user.activeServer == server) {
+      typingUsers.push(user.username)
+    }
+  })
+
   const typingState: TypingState = {
-    names: Object.values(getUsers())
-      .filter((user) => user.isTyping && user.activeChannel === channel && user.activeServer === server)
-      .map((user) => user.username),
+    names: typingUsers,
     channel: channel
   }
   getHttpServer().to(getChannelUid(mapping)).emit('typingUsers', typingState)
@@ -42,8 +64,5 @@ export const onTypingInfo = (wsState: WsState, typingInfo: TypingInfo) => {
       return
     }
   }
-  // TODO: store last typing info update
-  //       and "timeout" typing if the user
-  //       stops sending typing state
   sendTyping(user, typingInfo.isTyping, typingInfo.server, typingInfo.channel)
 }

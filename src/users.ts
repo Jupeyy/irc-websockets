@@ -7,7 +7,8 @@ export interface User {
   loggedIn: boolean,
   activeChannel: string,
   activeServer: string,
-  isTyping: boolean
+  isTyping: boolean,
+  lastTyping: Date
 }
 
 interface UserList {

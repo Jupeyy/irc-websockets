@@ -55,7 +55,8 @@ getHttpServer().on('connection', (socket: Socket<ClientToServerEvents, ServerToC
       loggedIn: false,
       activeChannel: '_connecting',
       activeServer: '_connecting',
-      isTyping: false
+      isTyping: false,
+      lastTyping: new Date()
     }
     getUsers()[socket.id] = user
 
