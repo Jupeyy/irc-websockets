@@ -18,7 +18,7 @@ export const getExpress = (): Express => {
   return app
 }
 
-export const getHttpServer = (): Server => {
+export const getWebsocket = (): Server => {
   return io
 }
 

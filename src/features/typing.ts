@@ -2,7 +2,7 @@ import { WsState } from ".."
 import { useAccounts } from "./accounts"
 import { ChannelMapping, getMappingByDiscord } from "./channels"
 import { getChannelUid } from "../history"
-import { getHttpServer } from "../network/server"
+import { getWebsocket } from "../network/server"
 import { TypingInfo, TypingState } from "../socket.io"
 import { User, getUserBySocket, getUsers } from "../users"
 
@@ -41,7 +41,7 @@ export const sendTyping = (user: User, typing: boolean, server: string, channel:
     names: typingUsers,
     channel: channel
   }
-  getHttpServer().to(getChannelUid(mapping)).emit('typingUsers', typingState)
+  getWebsocket().to(getChannelUid(mapping)).emit('typingUsers', typingState)
 }
 
 export const onTypingInfo = (wsState: WsState, typingInfo: TypingInfo) => {

@@ -1,7 +1,7 @@
 import { Socket } from 'socket.io'
 import { ClientToServerEvents, ServerToClientEvents, IrcMessage, AuthRequest, JoinChannel, TypingInfo } from './socket.io'
 import { User, getUserBySocket, getUsers } from './users';
-import { getHttpServer } from './network/server';
+import { getWebsocket } from './network/server';
 import { onAuthRequest } from './features/accounts';
 import { generateToken } from './base/token';
 import { onTypingInfo } from './features/typing';
@@ -38,7 +38,7 @@ export interface WsState {
   socket: Socket<ClientToServerEvents, ServerToClientEvents>
 }
 
-getHttpServer().on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>): void => {
+getWebsocket().on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>): void => {
     socket.join('_connecting')
     const ipAddr = socket.client.conn.remoteAddress
     const userAgent = socket.handshake.headers['user-agent'] || 'no-agent'
@@ -64,7 +64,7 @@ getHttpServer().on('connection', (socket: Socket<ClientToServerEvents, ServerToC
       const user = getUserBySocket(socket)
       if (user) {
         console.log(`[*] '${user.username}' left`)
-        getHttpServer().emit('userLeave', user.username)
+        getWebsocket().emit('userLeave', user.username)
       } else {
         console.log(`[*] leave before login ${userAgent}`)
       }

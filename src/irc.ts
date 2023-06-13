@@ -2,7 +2,8 @@ import irc = require('irc')
 import { getConnectedIrcChannels } from './bridge_connections'
 import { activeIrcChannels, ChannelMapping } from './features/channels'
 import { logMessage, getChannelUid } from './history'
-import { getHttpServer } from './network/server'
+import { getWebsocket } from './network/server'
+import { addMessage } from './features/messages'
 
 if (!process.env.IRC_SERVER) {
 	console.log('Error: IRC_SERVER is not set! check your .env file')
@@ -36,7 +37,6 @@ getConnectedIrcChannels().forEach((connection: ChannelMapping) => {
       server: connection.irc.serverName,
       date: new Date().toUTCString()
     }
-    logMessage(connection.discord.server, connection.discord.channel, ircMessage)
-    getHttpServer().to(getChannelUid(connection)).emit('message', ircMessage)
+    addMessage(connection, ircMessage)
   })
 })

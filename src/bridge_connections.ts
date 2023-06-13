@@ -6,6 +6,19 @@ if (!process.env.IRC_CHANNEL) {
 }
 
 // TODO: this should be a json not tracked in git
+//       if we do so channel and server names have to be sanitized
+//       to only contain a-z _ -
+//       because the backend uses server#channel and server
+//       as websocket rooms so if server name matches server#channel of another channel thats bad
+//       example:
+//           server = 'foo#bar'
+//           server2 = 'foo'
+//           channel in server2 = 'bar'
+//
+//           server == server2#channel
+//
+//       also the front end uses channel and server names
+//       in data tags and query selectors
 const connectedIrcChannels: ChannelMapping[] = [
   {
     irc: {

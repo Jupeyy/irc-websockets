@@ -1,7 +1,7 @@
 import { WsState } from ".."
 import { getConfig } from "../base/config"
 import { joinChannel } from "./channels"
-import { getHttpServer } from "../network/server"
+import { getWebsocket } from "../network/server"
 import { AuthRequest, IrcMessage } from "../socket.io"
 import { getUserByName, getUserBySocket } from "../users"
 
@@ -69,7 +69,7 @@ export const onAuthRequest = (wsState: WsState, auth: AuthRequest) => {
     return
   }
   console.log(`[*] '${user.username}' logged in`)
-  getHttpServer().emit('userJoin', user.username)
+  getWebsocket().emit('userJoin', user.username)
   wsState.socket.emit(
     'authResponse',
     {

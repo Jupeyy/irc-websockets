@@ -80,6 +80,7 @@ export const joinChannel = (socket: Socket, discordChannel: string, discordServe
     }
   })
   socket.join(socket.id)
-  socket.join(getChannelUid(mapping))
+  socket.join(getChannelUid(mapping)) // channel speficic for "is typing" messages
+  socket.join(discordServer) // server specific for chat messages from all channels
   return true
 }

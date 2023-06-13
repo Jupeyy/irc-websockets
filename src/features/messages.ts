@@ -1,11 +1,16 @@
 import { WsState } from ".."
 import { logMessage, getChannelUid } from "../history"
 import { sendIrc } from "../irc"
-import { getHttpServer } from "../network/server"
+import { getWebsocket } from "../network/server"
 import { IrcMessage } from "../socket.io"
 import { getUserBySocket } from "../users"
 import { useAccounts, checkAuth } from "./accounts"
 import { ChannelMapping, getMappingByDiscord } from "./channels"
+
+export const addMessage = (mapping: ChannelMapping, message: IrcMessage) => {
+  logMessage(mapping.discord.server, mapping.discord.channel, message)
+  getWebsocket().to(mapping.discord.server).emit('message', message)
+}
 
 export const onMessage = (wsState: WsState, message: IrcMessage) => {
   if(useAccounts()) {
@@ -37,6 +42,5 @@ export const onMessage = (wsState: WsState, message: IrcMessage) => {
   if (!sendIrc(mapping.irc.serverName, mapping.irc.channel, messageStr)) {
     return
   }
-  logMessage(message.server, message.channel, message)
-  getHttpServer().to(getChannelUid(mapping)).emit('message', message)
+  addMessage(mapping, message)
 }
