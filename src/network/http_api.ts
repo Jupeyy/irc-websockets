@@ -4,10 +4,15 @@ import bodyParser from 'body-parser';
 import { Request, Response } from 'express';
 import { getDiscordChannels } from '../features/channels';
 import { getConfig } from '../base/config';
-import { getMessages } from '../history';
+import { MessageLogOptions, getMessages } from '../history';
 import { getExpress } from './server';
 import { getUsers, logoutUser } from '../users';
+import { IrcMessage } from '../socket.io';
 const cors = require('cors')
+
+export interface ParamsDictionary {
+  [key: string]: string;
+}
 
 getExpress().use(bodyParser.json())
 getExpress().use(
@@ -23,8 +28,17 @@ getExpress().use((req, res, next) => {
   next()
 })
 getExpress().use(cors())
-getExpress().get('/:server/:channel/messages', (req, res) => {
-  res.end(JSON.stringify(getMessages(req.params.server, req.params.channel)))
+type QueryParams = {
+  from: string,
+  count: string
+}
+getExpress().get('/:server/:channel/messages', (req: Request<ParamsDictionary, {}, {}, QueryParams>, res) => {
+  const options: MessageLogOptions = {
+    fromId: parseInt(req.query.from, 10) || 0,
+    count: parseInt(req.query.count, 10) || 10
+  }
+  const messages: IrcMessage[] = getMessages(req.params.server, req.params.channel, options)
+  res.end(JSON.stringify(messages))
 })
 getExpress().get('/:server/:channel/typers', (req, res) => {
   res.end(

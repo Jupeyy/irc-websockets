@@ -1,13 +1,15 @@
 import { WsState } from ".."
-import { logMessage, getChannelUid } from "../history"
+import { logMessage, getNextMessageId, getLatestMessageId } from "../history"
 import { sendIrc } from "../irc"
 import { getWebsocket } from "../network/server"
-import { IrcMessage } from "../socket.io"
+import { AlertMessage, IrcMessage } from "../socket.io"
 import { getUserBySocket } from "../users"
 import { useAccounts, checkAuth } from "./accounts"
 import { ChannelMapping, getMappingByDiscord } from "./channels"
+import { isRatelimited } from "./rate_limit"
 
 export const addMessage = (mapping: ChannelMapping, message: IrcMessage) => {
+  message.token = 'xxx' // do not leak token to clients
   logMessage(mapping.discord.server, mapping.discord.channel, message)
   getWebsocket().to(mapping.discord.server).emit('message', message)
 }
@@ -39,6 +41,22 @@ export const onMessage = (wsState: WsState, message: IrcMessage) => {
     console.log(`[!] invalid discord mapping '${message.server}#${message.channel}'`)
     return
   }
+  if (isRatelimited(message)) {
+    console.log(`[!] ratelimited user '${user.username}' in '${message.server}#${message.channel}'`)
+    const alertMsg: AlertMessage = {
+      success: false,
+      message: 'Ratelimited message sending',
+      expire: 7000
+    }
+    user.socket.emit('alert', alertMsg)
+    return
+  }
+  const messageId = getNextMessageId()
+  if (message.id !== messageId) {
+    console.log(`[!] The client expected to get msgid=${message.id} but got msgid=${messageId}`)
+    console.log(`    this is not too bad but means the client is possibly out of sync or overwhealmed`)
+  }
+  message.id = messageId
   if (!sendIrc(mapping.irc.serverName, mapping.irc.channel, messageStr)) {
     return
   }
