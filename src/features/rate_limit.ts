@@ -9,8 +9,8 @@ export const isRatelimited = (message: IrcMessage): boolean => {
     // just check current date
     const now = new Date()
     const diff = now.valueOf() - lastMesgSent.valueOf()
-    // delete messages from log that are older than 7s
-    while (ratelimitLog.length > 0 && (now.valueOf() - ratelimitLog[0].valueOf()) > 7000) {
+    // delete messages from log that are older than 8s
+    while (ratelimitLog.length > 0 && (now.valueOf() - ratelimitLog[0].valueOf()) > 8000) {
         ratelimitLog.shift()
     }
     // if the log is longer than 5
@@ -19,8 +19,8 @@ export const isRatelimited = (message: IrcMessage): boolean => {
         return true
     }
     lastMesgSent = now
-    // log messages sent in 2s intervals
-    if (diff < 2000) {
+    // log messages sent in 3s intervals
+    if (diff < 3000) {
         ratelimitLog.push(now)
     }
     return false

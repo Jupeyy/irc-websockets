@@ -4,4 +4,5 @@ node_modules/
 .env*
 tmp/
 dist/
+message_log.json
 

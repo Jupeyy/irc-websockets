@@ -46,7 +46,7 @@ export const onMessage = (wsState: WsState, message: IrcMessage) => {
     const alertMsg: AlertMessage = {
       success: false,
       message: 'Ratelimited message sending',
-      expire: 7000
+      expire: 8000
     }
     user.socket.emit('alert', alertMsg)
     return
