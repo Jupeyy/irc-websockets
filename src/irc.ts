@@ -28,6 +28,7 @@ client.addListener('error', (message) => {
 })
 
 getConnectedIrcChannels().forEach((connection: ChannelMapping) => {
+  console.log(`[*] adding irc listener for channel ${connection.irc.channel}`)
   client.addListener(`message#${connection.irc.channel}`, (from, message) => {
     console.log(from + ' => #yourchannel: ' + message)
     const ircMessage: IrcMessage = {
