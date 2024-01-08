@@ -127,9 +127,6 @@ export const onAuthRequest = (wsState: WsState, auth: AuthRequest) => {
     return
   }
   console.log(`[*] '${user.username}' logged in ${user.dbUser ? 'to account' : 'with master password'}`)
-  if(user.dbUser) {
-    console.log(user.dbUser)
-  }
   getWebsocket().emit('userJoin', user.username)
   wsState.socket.emit(
     'authResponse',
