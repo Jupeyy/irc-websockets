@@ -56,7 +56,8 @@ getWebsocket().on('connection', (socket: Socket<ClientToServerEvents, ServerToCl
       activeChannel: '_connecting',
       activeServer: '_connecting',
       isTyping: false,
-      lastTyping: new Date()
+      lastTyping: new Date(),
+      dbUser: null
     }
     getUsers()[socket.id] = user
 

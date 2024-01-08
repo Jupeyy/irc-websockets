@@ -4,6 +4,7 @@ import { joinChannel } from "./channels"
 import { getWebsocket } from "../network/server"
 import { AuthRequest, IrcMessage } from "../socket.io"
 import { getUserByName, getUserBySocket } from "../users"
+import { IUserRow, getUser, isUsernameTaken } from "../base/db"
 
 export const useAccounts = (): boolean => {
   return getConfig().requirePasswords
@@ -24,8 +25,19 @@ export const checkAuth = (message: IrcMessage): boolean => {
   return true
 }
 
+const isValidCredentials = (auth: AuthRequest, dbUser: null | IUserRow): boolean => {
+  // there are two valid logins
+  // username and password with a proper account
+  // or one master password that does not auth a full account and where users pick the username freely
+  if(!useAccounts()) {
+    return true
+  }
+  return process.env.ACCOUNTS_PASSWORD === auth.password || dbUser != null
+}
+
 export const onAuthRequest = (wsState: WsState, auth: AuthRequest) => {
-  if(getUserByName(auth.username)) {
+  const dbUser = getUser(auth.username, auth.password)
+  if (getUserByName(auth.username)) {
     wsState.socket.emit(
       'authResponse',
       {
@@ -37,14 +49,26 @@ export const onAuthRequest = (wsState: WsState, auth: AuthRequest) => {
     )
     return
   }
-  if (useAccounts() && process.env.ACCOUNTS_PASSWORD !== auth.password) {
+  if (!isValidCredentials(auth, dbUser)) {
     wsState.socket.emit(
       'authResponse',
       {
         username: auth.username,
         token: '',
         success: false,
-        message: 'wrong password'
+        message: 'wrong credentials'
+      }
+    )
+    return
+  }
+  if(!dbUser && isUsernameTaken(auth.username)) {
+    wsState.socket.emit(
+      'authResponse',
+      {
+        username: auth.username,
+        token: '',
+        success: false,
+        message: 'this username needs a different password'
       }
     )
     return
@@ -55,6 +79,7 @@ export const onAuthRequest = (wsState: WsState, auth: AuthRequest) => {
   }
   user.username = auth.username
   user.loggedIn = true
+  user.dbUser = dbUser
   if (!joinChannel(wsState.socket, auth.channel, auth.server)) {
     wsState.socket.emit(
       'authResponse',
@@ -68,7 +93,10 @@ export const onAuthRequest = (wsState: WsState, auth: AuthRequest) => {
     user.loggedIn = false
     return
   }
-  console.log(`[*] '${user.username}' logged in`)
+  console.log(`[*] '${user.username}' logged in ${user.dbUser ? 'to account' : 'with master password'}`)
+  if(user.dbUser) {
+    console.log(user.dbUser)
+  }
   getWebsocket().emit('userJoin', user.username)
   wsState.socket.emit(
     'authResponse',

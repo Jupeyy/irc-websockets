@@ -1,4 +1,5 @@
 import { Socket } from 'socket.io'
+import { IUserRow } from './base/db'
 
 export interface User {
   username: string,
@@ -8,7 +9,8 @@ export interface User {
   activeChannel: string,
   activeServer: string,
   isTyping: boolean,
-  lastTyping: Date
+  lastTyping: Date,
+  dbUser: null | IUserRow
 }
 
 interface UserList {
@@ -40,6 +42,7 @@ export const getUserBySocket = (socket: Socket): User | null => {
 export const logoutUser = (user: User) => {
   console.log(`[*] logging out ${user.username}`)
   user.loggedIn = false
+  user.dbUser = null
   user.socket.emit(
     'logout',
     {

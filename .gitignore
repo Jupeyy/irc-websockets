@@ -4,5 +4,10 @@ node_modules/
 .env*
 tmp/
 dist/
+db/
+*-shm
+*-wal
+*.db
+*.sqlite3
 message_log.json
 
