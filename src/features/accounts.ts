@@ -75,6 +75,10 @@ export const onRegisterRequest = (wsState: WsState, register: RegisterRequest) =
     authError(wsState, 'password has to be between 3 and 1024 characters long')
     return
   }
+  if(register.password === process.env.SIGN_UP_TOKEN || register.password === process.env.ACCOUNTS_PASSWORD) {
+    authError(wsState, 'please choose a different password')
+    return
+  }
   if(isUsernameTaken(register.username)) {
     authError(wsState, 'this username is already taken')
     return
