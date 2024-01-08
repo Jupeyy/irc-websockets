@@ -1,3 +1,5 @@
+// TODO: move this to own project https://github.com/ChillerDragon/irc-websockets/issues/3
+
 import path from 'path'
 import Database from 'better-sqlite3'
 
