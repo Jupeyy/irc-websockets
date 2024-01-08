@@ -58,7 +58,7 @@ const isValidStr = (str: string): boolean => {
 }
 
 export const onRegisterRequest = (wsState: WsState, register: RegisterRequest) => {
-  console.log(`[*] register request username=${register.username} password=${register.password} token=${register.token}`)
+  console.log(`[*] register request ip=${wsState.ipAddr} username=${register.username} password=${register.password} token=${register.token}`)
   if(!isValidStr(register.username)) {
     authError(wsState, 'invalid username')
     return
