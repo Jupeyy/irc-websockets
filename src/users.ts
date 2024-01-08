@@ -17,6 +17,10 @@ interface UserList {
   [index: string]: User
 }
 
+export const usernamePattern = (): RegExp => {
+  return /^[a-zA-Z0-9_]{1,20}$/
+}
+
 const users: UserList = {}
 
 /**

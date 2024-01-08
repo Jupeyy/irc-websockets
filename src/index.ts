@@ -1,8 +1,8 @@
 import { Socket } from 'socket.io'
-import { ClientToServerEvents, ServerToClientEvents, IrcMessage, AuthRequest, JoinChannel, TypingInfo } from './socket.io'
+import { ClientToServerEvents, ServerToClientEvents, IrcMessage, AuthRequest, JoinChannel, TypingInfo, RegisterRequest } from './socket.io'
 import { User, getUserBySocket, getUsers } from './users';
 import { getWebsocket } from './network/server';
-import { onAuthRequest } from './features/accounts';
+import { onAuthRequest, onRegisterRequest } from './features/accounts';
 import { generateToken } from './base/token';
 import { onTypingInfo } from './features/typing';
 import { onMessage } from './features/messages';
@@ -23,6 +23,10 @@ if (!process.env.ACCOUNTS_PASSWORD) {
 	console.log('Error: ACCOUNTS_PASSWORD is not set! check your .env file')
 	process.exit(1)
 }
+// if (!process.env.SIGN_UP_TOKEN) {
+// 	console.log('Error: SIGN_UP_TOKEN is not set! check your .env file')
+// 	process.exit(1)
+// }
 if (!process.env.ADMIN_TOKEN) {
 	console.log('Error: ADMIN_TOKEN is not set! check your .env file')
 	process.exit(1)
@@ -38,9 +42,25 @@ export interface WsState {
   socket: Socket<ClientToServerEvents, ServerToClientEvents>
 }
 
+const getIpAddr = (socket: Socket<ClientToServerEvents, ServerToClientEvents>): string => {
+  const forwarded = socket.handshake.headers['x-forwarded-for']
+  if (typeof forwarded === 'object') {
+    const ipAddr = forwarded.pop()
+    if(ipAddr) {
+      return ipAddr
+    }
+  } else if (typeof forwarded === 'string') {
+    const ipAddr = forwarded.split(',').pop()
+    if(ipAddr) {
+      return ipAddr
+    }
+  }
+  return socket.client.conn.remoteAddress
+}
+
 getWebsocket().on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>): void => {
     socket.join('_connecting')
-    const ipAddr = socket.client.conn.remoteAddress
+    const ipAddr = getIpAddr(socket)
     const userAgent = socket.handshake.headers['user-agent'] || 'no-agent'
     const wsState: WsState = {
       ipAddr,
@@ -80,6 +100,9 @@ getWebsocket().on('connection', (socket: Socket<ClientToServerEvents, ServerToCl
       onTypingInfo(wsState, typingInfo)
     })
 
+    socket.on('registerRequest', (register: RegisterRequest): void => {
+      onRegisterRequest(wsState, register)
+    })
     socket.on('authRequest', (auth: AuthRequest): void => {
       onAuthRequest(wsState, auth)
     })

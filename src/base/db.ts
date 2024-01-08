@@ -4,14 +4,14 @@ db.pragma('journal_mode = WAL')
 
 const dbQuery = `
 CREATE TABLE IF NOT EXISTS Accounts(
-  ID INTEGER PRIMARY KEY AUTOINCREMENT,
-  username TEXT UNIQUE,
-  password TEXT,
-  register_ip TEXT,
-  login_ip TEXT,
-  created_at TEXT,
-  updated_at TEXT,
-  is_admin INTEGER
+  ID          INTEGER PRIMARY KEY AUTOINCREMENT,
+  username    TEXT UNIQUE NOT NULL,
+  password    TEXT        NOT NULL,
+  register_ip TEXT        NOT NULL,
+  login_ip    TEXT        NOT NULL,
+  created_at  TEXT        NOT NULL,
+  updated_at  TEXT        NOT NULL,
+  is_admin    INTEGER     NOT NULL
 )`
 
 export interface IUserRow {
@@ -27,19 +27,17 @@ export interface IUserRow {
 
 db.exec(dbQuery)
 
-export const addNewUser = (username: string, password: string) => {
+export const addNewUser = (username: string, password: string, ipAddr: string) => {
   const insertQuery = `INSERT INTO Accounts(
     username, password, register_ip, login_ip, created_at, updated_at, is_admin 
-  ) VALUES (?, ? , ?, ?, ?, ?, ?);
+  ) VALUES (?, ? , ?, ?, DateTime('now'), DateTime('now'), ?);
   `
   const stmt = db.prepare(insertQuery)
   stmt.run(
     username,
     password,
-    '127.0.0.1',
-    '127.0.0.1',
-    'now',
-    'now',
+    ipAddr,
+    ipAddr,
     0
   )
 }

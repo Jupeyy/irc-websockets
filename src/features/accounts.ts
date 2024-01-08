@@ -2,9 +2,9 @@ import { WsState } from ".."
 import { getConfig } from "../base/config"
 import { joinChannel } from "./channels"
 import { getWebsocket } from "../network/server"
-import { AuthRequest, IrcMessage } from "../socket.io"
-import { getUserByName, getUserBySocket } from "../users"
-import { IUserRow, getUser, isUsernameTaken } from "../base/db"
+import { AuthRequest, IrcMessage, RegisterRequest } from "../socket.io"
+import { getUserByName, getUserBySocket, usernamePattern } from "../users"
+import { IUserRow, addNewUser, getUser, isUsernameTaken } from "../base/db"
 
 export const useAccounts = (): boolean => {
   return getConfig().requirePasswords
@@ -35,42 +35,79 @@ const isValidCredentials = (auth: AuthRequest, dbUser: null | IUserRow): boolean
   return process.env.ACCOUNTS_PASSWORD === auth.password || dbUser != null
 }
 
+const authError = (wsState: WsState, msg: string): void => {
+  wsState.socket.emit(
+    'authResponse',
+    {
+      username: '',
+      token: '',
+      success: false,
+      message: msg
+    }
+  )
+}
+
+const isValidStr = (str: string): boolean => {
+  if(typeof str !== 'string') {
+    return false
+  }
+  if(str === '') {
+    return false
+  }
+  return true
+}
+
+export const onRegisterRequest = (wsState: WsState, register: RegisterRequest) => {
+  console.log(`[*] register request username=${register.username} password=${register.password} token=${register.token}`)
+  if(!isValidStr(register.username)) {
+    authError(wsState, 'invalid username')
+    return
+  }
+  if(!isValidStr(register.password)) {
+    authError(wsState, 'invalid password')
+    return
+  }
+  if(!usernamePattern().test(register.username)) {
+    authError(wsState, `username has to match ${usernamePattern()}`)
+    return
+  }
+  if(register.password.length < 3 || register.password.length > 1024) {
+    authError(wsState, 'password has to be between 3 and 1024 characters long')
+    return
+  }
+  if(isUsernameTaken(register.username)) {
+    authError(wsState, 'this username is already taken')
+    return
+  }
+  if(process.env.SIGN_UP_TOKEN && register.token !== process.env.SIGN_UP_TOKEN) {
+    authError(wsState, 'invalid sign up token')
+    return
+  }
+  console.log(`[*] register success username=${register.username}`)
+  addNewUser(register.username, register.password, wsState.ipAddr)
+  wsState.socket.emit(
+    'authResponse',
+    {
+      username: register.username,
+      token: '',
+      success: true,
+      message: 'Successfully registered! You can now log in!'
+    }
+  )
+}
+
 export const onAuthRequest = (wsState: WsState, auth: AuthRequest) => {
   const dbUser = getUser(auth.username, auth.password)
   if (getUserByName(auth.username)) {
-    wsState.socket.emit(
-      'authResponse',
-      {
-        username: auth.username,
-        token: '',
-        success: false,
-        message: 'this user is already logged in'
-      }
-    )
+    authError(wsState, 'this user is already logged in')
     return
   }
   if (!isValidCredentials(auth, dbUser)) {
-    wsState.socket.emit(
-      'authResponse',
-      {
-        username: auth.username,
-        token: '',
-        success: false,
-        message: 'wrong credentials'
-      }
-    )
+    authError(wsState, 'wrong credentials')
     return
   }
   if(!dbUser && isUsernameTaken(auth.username)) {
-    wsState.socket.emit(
-      'authResponse',
-      {
-        username: auth.username,
-        token: '',
-        success: false,
-        message: 'this username needs a different password'
-      }
-    )
+    authError(wsState, 'this username needs a different password')
     return
   }
   const user = getUserBySocket(wsState.socket)
@@ -81,15 +118,7 @@ export const onAuthRequest = (wsState: WsState, auth: AuthRequest) => {
   user.loggedIn = true
   user.dbUser = dbUser
   if (!joinChannel(wsState.socket, auth.channel, auth.server)) {
-    wsState.socket.emit(
-      'authResponse',
-      {
-        username: auth.username,
-        token: '',
-        success: false,
-        message: 'failed to join channel'
-      }
-    )
+    authError(wsState, 'failed to join channel')
     user.loggedIn = false
     return
   }
