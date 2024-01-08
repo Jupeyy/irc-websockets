@@ -110,7 +110,12 @@ export const onAuthRequest = (wsState: WsState, auth: AuthRequest) => {
     authError(wsState, 'wrong credentials')
     return
   }
-  if(!dbUser && isUsernameTaken(auth.username)) {
+  if (dbUser) {
+    if (dbUser.blocked === 1) {
+      authError(wsState, 'this account is blocked')
+      return
+    }
+  } else if(isUsernameTaken(auth.username)) {
     authError(wsState, 'this username needs a different password')
     return
   }

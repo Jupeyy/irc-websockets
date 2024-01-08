@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "start": "tsc;node dist/index.js"
+    "start": "tsc;node dist/index.js",
+    "db": "ts-node src/db/cli.ts"
   },
   "repository": {
     "type": "git",
@@ -28,6 +29,7 @@
     "irc": "^0.5.2",
     "socket.io": "^4.6.1",
     "socket.io-client": "^4.6.1",
+    "ts-node": "^10.9.2",
     "typescript": "^5.0.4"
   },
   "devDependencies": {

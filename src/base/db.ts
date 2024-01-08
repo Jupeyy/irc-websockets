@@ -11,7 +11,8 @@ CREATE TABLE IF NOT EXISTS Accounts(
   login_ip    TEXT        NOT NULL,
   created_at  TEXT        NOT NULL,
   updated_at  TEXT        NOT NULL,
-  is_admin    INTEGER     NOT NULL
+  is_admin    INTEGER     NOT NULL,
+  blocked     INTEGER     NOT NULL default 0
 )`
 
 export interface IUserRow {
@@ -22,7 +23,8 @@ export interface IUserRow {
   login_ip: string,
   created_at: string,
   updated_at: string,
-  is_admin: number
+  is_admin: number,
+  blocked: number
 }
 
 db.exec(dbQuery)

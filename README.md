@@ -9,4 +9,11 @@ npm install
 npm run start
 ```
 
+Update to get new db schema
+```
+git pull
+npm i
+npm run db migrate
+```
+
 [Example client implementation](https://github.com/ChillerDragon/discord-irc/commit/9203d05af36485fff627a0dd5547f4be2e3dca89)
