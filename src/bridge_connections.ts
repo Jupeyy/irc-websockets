@@ -29,7 +29,8 @@ const connectedIrcChannels: ChannelMapping[] = [
     discord: {
       server: 'ddnet',
       channel: 'developer'
-    }
+    },
+    private: true
   },
   {
     irc: {
@@ -40,7 +41,8 @@ const connectedIrcChannels: ChannelMapping[] = [
     discord: {
       server: 'ddnet',
       channel: 'off-topic'
-    }
+    },
+    private: false
   },
   {
     irc: {
@@ -51,7 +53,8 @@ const connectedIrcChannels: ChannelMapping[] = [
     discord: {
       server: 'test',
       channel: 'test'
-    }
+    },
+    private: false
   }
 ]
 
@@ -71,7 +74,8 @@ if (getConnectedIrcChannels().filter((entry) => entry.irc.channel === process.en
       discord: {
         server: 'unknown',
         channel: 'unknown'
-      }
+      },
+      private: false
     }
   )
 }

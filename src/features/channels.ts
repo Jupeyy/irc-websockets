@@ -15,7 +15,8 @@ export interface ChannelMapping {
   discord: {
     server: string,
     channel: string
-  }
+  },
+  private: boolean
 }
 
 export const getMappingByDiscord = (discordServer: string, discordChannel: string): ChannelMapping | null => {

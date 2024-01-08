@@ -51,6 +51,15 @@ export const onMessage = (wsState: WsState, message: IrcMessage) => {
     user.socket.emit('alert', alertMsg)
     return
   }
+  if(mapping.private && !user.dbUser) {
+    const alertMsg: AlertMessage = {
+      success: false,
+      message: 'This is a private channel please login to your account',
+      expire: 8000
+    }
+    user.socket.emit('alert', alertMsg)
+    return
+  }
   const messageId = getNextMessageId()
   if (message.id !== messageId) {
     console.log(`[!] The client expected to get msgid=${message.id} but got msgid=${messageId}`)
