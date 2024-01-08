@@ -1,0 +1,1 @@
+ALTER TABLE Accounts ADD COLUMN blocked INTEGER NOT NULL default 0;
