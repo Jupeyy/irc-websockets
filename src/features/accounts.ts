@@ -3,7 +3,7 @@ import { getConfig } from "../base/config"
 import { joinChannel } from "./channels"
 import { getWebsocket } from "../network/server"
 import { AuthRequest, IrcMessage, RegisterRequest } from "../socket.io"
-import { getUserByName, getUserBySocket, usernamePattern } from "../users"
+import { getUserByName, getUserBySocket, logoutUser, usernamePattern } from "../users"
 import { IUserRow, addNewUser, getUser, isUsernameTaken } from "../base/db"
 
 export const useAccounts = (): boolean => {
@@ -102,9 +102,9 @@ export const onRegisterRequest = (wsState: WsState, register: RegisterRequest) =
 
 export const onAuthRequest = (wsState: WsState, auth: AuthRequest) => {
   const dbUser = getUser(auth.username, auth.password)
-  if (getUserByName(auth.username)) {
-    authError(wsState, 'this user is already logged in')
-    return
+  const conflictingUser = getUserByName(auth.username)
+  if(conflictingUser) {
+    logoutUser(conflictingUser, 'logged in from another location')
   }
   if (!isValidCredentials(auth, dbUser)) {
     authError(wsState, 'wrong credentials')

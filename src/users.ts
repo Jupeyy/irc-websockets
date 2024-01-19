@@ -43,14 +43,14 @@ export const getUserBySocket = (socket: Socket): User | null => {
   // return getUsers().find((user) => user.loggedIn && user.socket.id === socket.id) || null
 }
 
-export const logoutUser = (user: User) => {
+export const logoutUser = (user: User, message: string = 'logged out') => {
   console.log(`[*] logging out ${user.username}`)
   user.loggedIn = false
   user.dbUser = null
   user.socket.emit(
     'logout',
     {
-      message: 'logged out'
+      message
     }
   )
 }
