@@ -7,10 +7,13 @@ import { ChannelMapping, getMappingByDiscord } from './channels';
 import { addMessage } from './messages';
 import { IrcMessage } from '../socket.io';
 import { getNextMessageId } from '../history';
+import { getWebhook } from '../base/db';
+import { sendIrc } from '../irc';
 
 export interface Webhook {
   id: number,
   name: string,
+  token: string,
   discordServer: string,
   discordChannel: string,
   registerIp: string,
@@ -22,20 +25,14 @@ export interface Webhook {
 
 // curl -H "Content-Type: application/json" -X POST --data '{"content": "Posted Via Command line"}' http://127.0.0.1:6969/webhooks/id/token
 export const onDiscordWebhookExecute = (webhookId: string, webhookToken: string, req: Request, res: Response) => {
-  console.log(`[*] webhook: ${req}`)
+  console.log(`[*] webhook: ${req} id=${webhookId} token=${webhookToken}`)
 
-  // TODO: get those from db
-  const webhook: Webhook = {
-    id: 0,
-    name: 'webhook',
-    discordServer: 'ddnet',
-    discordChannel: 'developer',
-    registerIp: '127.0.0.1',
-    lastUseIp: '127.0.0.1',
-    createdAt: 'now',
-    updatedAt: 'now',
-    ownerId: 0
+  const webhook = getWebhook(webhookId, webhookToken)
+  if(!webhook) {
+    res.send({ message: 'TODO: this is not discord api yet. BUT ERROR 404' })
+    return
   }
+
   const mapping: ChannelMapping | null = getMappingByDiscord(webhook.discordServer, webhook.discordChannel)
   if (!mapping) {
     console.log(`[!] invalid discord mapping '${webhook.discordServer}#${webhook.discordChannel}'`)
@@ -44,7 +41,6 @@ export const onDiscordWebhookExecute = (webhookId: string, webhookToken: string,
   }
   // https://discord.com/developers/docs/resources/webhook#execute-webhook
   const messageContent = req.body.content
-  console.log(req.body)
   if(!messageContent) {
     res.send({ message: 'TODO: this is not discord api yet. BUT ERROR msg empty' })
     return
@@ -57,6 +53,11 @@ export const onDiscordWebhookExecute = (webhookId: string, webhookToken: string,
     channel: webhook.discordChannel,
     server: webhook.discordServer,
     date: new Date().toUTCString()
+  }
+
+  if (!sendIrc(mapping.irc.serverName, mapping.irc.channel, messageContent)) {
+    res.send({ message: 'TODO: this is not discord api yet. ERROR FAILED TO irc' })
+    return
   }
   addMessage(mapping, message)
 

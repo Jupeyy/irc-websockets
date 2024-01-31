@@ -3,6 +3,7 @@
 CREATE TABLE IF NOT EXISTS Webhooks(
   ID              INTEGER PRIMARY KEY AUTOINCREMENT,
   name            TEXT UNIQUE NOT NULL,
+  token           TEXT        NOT NULL,
   discord_server  TEXT        NOT NULL,
   discord_channel TEXT        NOT NULL,
   register_ip     TEXT        NOT NULL,
