@@ -4,6 +4,7 @@ import path from 'path'
 import Database from 'better-sqlite3'
 
 import { readFileSync, readdirSync } from 'fs'
+import { exit } from 'process'
 const db = new Database('./db/main.db')
 db.pragma('journal_mode = WAL')
 
@@ -53,6 +54,12 @@ const actionMigrate = (): void => {
     }
 }
 
+const usage = (): void => {
+    console.log('usage: cli.ts [action]')
+    console.log('actions:')
+    console.log('  migrate')
+}
+
 const main = (): void => {
     const args = process.argv
     // hack to get only args passed to script
@@ -62,7 +69,14 @@ const main = (): void => {
     for(const arg of args) {
         if(arg === 'migrate') {
             actionMigrate()
+        } else {
+            usage()
+            exit(1)
         }
+    }
+    if(args.length === 0) {
+        usage()
+        exit(0)
     }
 }
 

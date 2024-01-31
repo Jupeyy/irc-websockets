@@ -8,6 +8,7 @@ import { MessageLogOptions, getMessages } from '../history';
 import { getExpress } from './server';
 import { getUsers, logoutUser } from '../users';
 import { IrcMessage } from '../socket.io';
+import { onDiscordWebhookExecute } from '../features/webhooks';
 const cors = require('cors')
 
 export interface ParamsDictionary {
@@ -105,4 +106,10 @@ getExpress().post('/admin/password', (req: Request, res: Response) => {
   res.send({
     message: 'OK'
   })
+})
+
+// https://discord.com/developers/docs/resources/webhook#execute-webhook
+// /webhooks/{webhook.id}/{webhook.token}
+getExpress().post('/webhooks/:webhook_id/:webhook_token', (req: Request, res: Response) => {
+  onDiscordWebhookExecute(req.params.webhook_id, req.params.webhook_token, req, res)
 })

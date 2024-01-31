@@ -2,19 +2,6 @@ import Database from 'better-sqlite3'
 const db = new Database('./db/main.db')
 db.pragma('journal_mode = WAL')
 
-const dbQuery = `
-CREATE TABLE IF NOT EXISTS Accounts(
-  ID          INTEGER PRIMARY KEY AUTOINCREMENT,
-  username    TEXT UNIQUE NOT NULL,
-  password    TEXT        NOT NULL,
-  register_ip TEXT        NOT NULL,
-  login_ip    TEXT        NOT NULL,
-  created_at  TEXT        NOT NULL,
-  updated_at  TEXT        NOT NULL,
-  is_admin    INTEGER     NOT NULL,
-  blocked     INTEGER     NOT NULL default 0
-)`
-
 export interface IUserRow {
   ID: number,
   username: string,
@@ -27,11 +14,20 @@ export interface IUserRow {
   blocked: number
 }
 
-db.exec(dbQuery)
+try {
+  // TODO: read own source code or use db cli to find latest migration timestamp
+  //       and verify that is set
+  //       otherwise accounts might exist but newer migrations are missing
+  db.exec('SELECT * FROM Accounts LIMIT 1')
+} catch (SqliteError) {
+  console.log(`[!] Error: test select failed`)
+  console.log(`[!]        try running 'npm run db migrate'`)
+  process.exit(1)
+}
 
 export const addNewUser = (username: string, password: string, ipAddr: string) => {
   const insertQuery = `INSERT INTO Accounts(
-    username, password, register_ip, login_ip, created_at, updated_at, is_admin 
+    username, password, register_ip, login_ip, created_at, updated_at, is_admin
   ) VALUES (?, ? , ?, ?, DateTime('now'), DateTime('now'), ?);
   `
   const stmt = db.prepare(insertQuery)

@@ -10,9 +10,44 @@ if (!process.env.IRC_SERVER) {
 	process.exit(1)
 }
 
-const client = new irc.Client(process.env.IRC_SERVER, 'ws-client', {
-	channels: activeIrcChannels().map((channel) => `#${channel}`),
-})
+class MockIrcClient {
+  constructor(server: string, nick: string, opts?: any)
+  {
+  }
+
+  addListener(eventName: string, _listener: (...args: any[]) => void): this
+  {
+    console.log(`[mock-irc] added listener for '${eventName}'`)
+    if (eventName !== 'error') {
+      // send a message in every channel instanly once for testing
+      // and then keep them coming slowly and randomly
+      setTimeout(() => { _listener('mock_user', 'fake mock message') }, 100)
+      setInterval(() => {
+        if (Math.random() > 0.1) {
+          return
+        }
+        _listener('mock_user', 'fake mock message')
+      }, 50000)
+    }
+    return this
+  }
+
+  public say(target: string, message: string): void
+  {
+    console.log(`[mock-irc][${target}] ${message}`)
+  }
+}
+
+const getIrcClient = (): irc.Client => {
+  if(process.env.DRY_IRC) {
+    return new MockIrcClient('mock', 'mock') as irc.Client
+  }
+  return new irc.Client(process.env.IRC_SERVER as string, 'ws-client', {
+    channels: activeIrcChannels().map((channel) => `#${channel}`),
+  })
+}
+
+const client = getIrcClient()
 
 export const sendIrc = (ircServer: string, ircChannel: string, message: string): boolean => {
   if (ircServer !== 'quakenet') {
@@ -30,7 +65,7 @@ client.addListener('error', (message) => {
 getConnectedIrcChannels().forEach((connection: ChannelMapping) => {
   console.log(`[*] adding irc listener for channel ${connection.irc.channel}`)
   client.addListener(`message#${connection.irc.channel}`, (from, message) => {
-    console.log(from + ' => #yourchannel: ' + message)
+    console.log(from + ` => #${connection.irc.channel}: ` + message)
     const ircMessage: IrcMessage = {
       id: getNextMessageId(),
       from: from,
