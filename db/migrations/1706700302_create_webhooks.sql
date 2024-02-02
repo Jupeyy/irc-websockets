@@ -1,6 +1,6 @@
 -- TODO: create Channels table and use its id
 --        instead of `discord_server` and `discord_channel`
-CREATE TABLE IF NOT EXISTS Webhooks(
+CREATE TABLE IF NOT EXISTS webhooks(
   ID              INTEGER PRIMARY KEY AUTOINCREMENT,
   name            TEXT UNIQUE NOT NULL,
   token           TEXT        NOT NULL,
