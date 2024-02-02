@@ -7,7 +7,8 @@
     "build": "tsc",
     "start": "tsc;node dist/index.js",
     "db": "ts-node src/db/cli.ts",
-    "seed": "ts-node src/db/seed.ts"
+    "seed": "ts-node src/db/seed.ts",
+    "console": "node --require ts-node/register/transpile-only --experimental-repl-await console/console.ts"
   },
   "repository": {
     "type": "git",
