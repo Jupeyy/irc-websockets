@@ -32,7 +32,7 @@ try {
   // TODO: read own source code or use db cli to find latest migration timestamp
   //       and verify that is set
   //       otherwise accounts might exist but newer migrations are missing
-  db.exec('SELECT * FROM Accounts LIMIT 1')
+  db.exec('SELECT * FROM webhooks LIMIT 1')
 } catch (SqliteError) {
   console.log(`[!] Error: test select failed`)
   console.log(`[!]        try running 'npm run db migrate'`)
