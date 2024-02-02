@@ -1,4 +1,5 @@
 import { getDb } from "../base/db"
+import { Webhook } from "./webhook"
 
 export class Channel {
   id: number
@@ -37,6 +38,10 @@ export class Channel {
       return null
     }
     return new Channel(row)
+  }
+
+  webhooks (): Webhook[] {
+    return Webhook.where('channel_id', this.id)
   }
 }
 
