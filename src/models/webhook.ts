@@ -71,7 +71,7 @@ export class Webhook {
     //       i am sick of it. I rather risk sql injection than type out one array of strings that i then have to
     //       maintain seperately
 
-    if (!/^[a-z]+$/.test(column)) {
+    if (!/^[a-z_]+$/.test(column)) {
       throw new Error(`SQL injection prevention. column='${column}' value='${value}'`);
     }
 
