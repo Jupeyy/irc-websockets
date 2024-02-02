@@ -150,8 +150,12 @@ export const onDiscordGetChannelWebhooks = (channelId: string, req: Request, res
   console.log(`[*] get channel webhooks channelId=${channelId}`)
 
   const channel = Channel.find(channelId)
-  console.log(channel)
-
-
-  res.send({ message: 'TODO: this is not discord api yet.' })
+  if(!channel) {
+    res.send({ message: 'TODO: this is not discord api yet. BUT ERROR channel not found' })
+    return
+  }
+  // we are close but not fully discord compatible yet
+  // should be an array of these objects
+  // https://discord.com/developers/docs/resources/webhook#webhook-object
+  res.send(channel.webhooks())
 }

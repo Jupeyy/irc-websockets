@@ -1,6 +1,9 @@
 import { getDb } from "../base/db"
 import { Channel } from "./channel"
 
+// ideally we would match those fields exactly
+// https://discord.com/developers/docs/resources/webhook#webhook-object
+
 type WebhookColumn = 'ID'
   | 'name'
   | 'token'
