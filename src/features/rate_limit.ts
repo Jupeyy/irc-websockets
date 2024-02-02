@@ -4,6 +4,21 @@ let lastMesgSent = new Date()
 const ratelimitLog: Date[] = []
 
 export const isRatelimited = (message: IrcMessage): boolean => {
+    if (message.message.includes("\n")) {
+        // this shows a weird error to the user
+        // it will mostly affect webhooks because the webchat does not allow
+        // entering newlines anyways
+        //
+        // But newlines are split on irc in two message
+        // So basically every message containing line breaks is
+        // spam by itself
+        //
+        // A custom error for the user would be nice
+        // but for now it is bundled under spam
+        // and when we use a irc network under the hood that allows spamming
+        // we could lift the newline limitation too
+        return true
+    }
     // const newDate = new Date(message.date)
     // ^ do not trust what the client claims is the date
     // just check current date
