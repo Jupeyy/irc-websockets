@@ -1,5 +1,5 @@
 import { Socket } from 'socket.io'
-import { IUserRow } from './base/db'
+import { IUserRow } from './models/user'
 
 export interface User {
   username: string,

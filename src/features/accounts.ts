@@ -4,7 +4,8 @@ import { joinChannel } from "./channels"
 import { getWebsocket } from "../network/server"
 import { AuthRequest, IrcMessage, RegisterRequest } from "../socket.io"
 import { getUserByName, getUserBySocket, logoutUser, usernamePattern } from "../users"
-import { IUserRow, addNewUser, getUser, isUsernameTaken } from "../base/db"
+import { addNewUser, getUser, isUsernameTaken } from "../base/db"
+import { IUserRow } from "../models/user"
 
 export const useAccounts = (): boolean => {
   return getConfig().requirePasswords

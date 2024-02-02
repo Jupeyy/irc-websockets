@@ -7,22 +7,9 @@ import { ChannelMapping, getMappingByDiscord } from './channels';
 import { addMessage } from './messages';
 import { IrcMessage } from '../socket.io';
 import { getNextMessageId } from '../history';
-import { getWebhook } from '../base/db';
 import { sendIrc } from '../irc';
 import { isRatelimited } from './rate_limit';
-
-export interface Webhook {
-  id: number,
-  name: string,
-  token: string,
-  discordServer: string,
-  discordChannel: string,
-  registerIp: string,
-  lastUseIp: string,
-  createdAt: string,
-  updatedAt: string,
-  ownerId: number
-}
+import { Webhook } from '../models/webhook';
 
 interface QueueMessage {
   ircMessage: IrcMessage
@@ -87,7 +74,7 @@ setInterval(popQueueEntry, 1000)
 export const onDiscordWebhookExecute = (webhookId: string, webhookToken: string, req: Request, res: Response) => {
   console.log(`[*] webhook: ${req} id=${webhookId} token=${webhookToken}`)
 
-  const webhook = getWebhook(webhookId, webhookToken)
+  const webhook = Webhook.find(webhookId, webhookToken)
   if(!webhook) {
     res.send({ message: 'TODO: this is not discord api yet. BUT ERROR 404' })
     return
