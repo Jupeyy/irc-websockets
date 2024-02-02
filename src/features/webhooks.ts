@@ -10,6 +10,7 @@ import { getNextMessageId } from '../history';
 import { sendIrc } from '../irc';
 import { isRatelimited } from './rate_limit';
 import { Webhook } from '../models/webhook';
+import { Channel } from '../models/channel';
 
 interface QueueMessage {
   ircMessage: IrcMessage
@@ -142,4 +143,15 @@ export const onDiscordWebhookExecute = (webhookId: string, webhookToken: string,
   addMessage(mapping, message)
 
   res.send({ message: 'TODO: this is not discord api yet. But OK' })
+}
+
+// curl -H "Content-Type: application/json" http://127.0.0.1:6969/channels/id/webhooks
+export const onDiscordGetChannelWebhooks = (channelId: string, req: Request, res: Response) => {
+  console.log(`[*] get channel webhooks channelId=${channelId}`)
+
+  const channel = Channel.find(channelId)
+  console.log(channel)
+
+
+  res.send({ message: 'TODO: this is not discord api yet.' })
 }

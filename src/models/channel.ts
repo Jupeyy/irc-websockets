@@ -2,7 +2,7 @@ import { getDb } from "../base/db"
 import { Webhook } from "./webhook"
 
 export class Channel {
-  id: number
+  id: number | bigint
   name: string
   description: string
   discordServer: string
@@ -30,7 +30,33 @@ export class Channel {
     this.ownerId = row.owner_id
   }
 
-  static find (channelId: number | string): null | Channel {
+  insert (): void {
+    const insertQuery = `
+    INSERT INTO channels(
+      name, description,
+      discord_server, discord_channel,
+      irc_channel, irc_server_ip, irc_server_name,
+      created_at, updated_at,
+      private, owner_id
+    ) VALUES (
+      ?, ?,
+      ?, ?,
+      ?, ?, ?,
+      DateTime('now'), DateTime('now'),
+      0, ?
+    );
+    `
+    const stmt = getDb().prepare(insertQuery)
+    const result = stmt.run(
+      this.name, this.description,
+      this.discordServer, this.discordChannel,
+      this.ircChannel, this.ircServerIp, this.ircServerName,
+      this.ownerId
+    )
+    this.id = result.lastInsertRowid
+  }
+
+  static find (channelId: number | bigint | string): null | Channel {
     const row: undefined | IChannelRow = getDb().
       prepare('SELECT * FROM channels WHERE ID = ?')
       .get(channelId) as undefined | IChannelRow

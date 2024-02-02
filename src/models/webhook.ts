@@ -14,17 +14,17 @@ type WebhookColumn = 'ID'
   'owner_id'
 
 export class Webhook {
-  id: number
+  id: number | bigint
   name: string
   token: string
   discordServer: string
   discordChannel: string
-  channelId: number
+  channelId: number | bigint
   registerIp: string
   lastUseIp: string
   createdAt: string
   updatedAt: string
-  ownerId: number
+  ownerId: number | bigint
 
   constructor(row: IWebhookRow) {
     this.id = row.ID
@@ -60,7 +60,7 @@ export class Webhook {
    * @param value
    * @returns Webhook
    */
-  static where (column: WebhookColumn, value: string | number): Webhook[] {
+  static where (column: WebhookColumn, value: number | bigint | string): Webhook[] {
     // TODO: replace the string params with one big object
     //       then you can call it like this: where({channel_id: 1})
     //       and it could also support ands like so: where({channel_id 1, name: 'foo'})
@@ -86,7 +86,7 @@ export class Webhook {
 
   insert (): void {
     const insertQuery = `
-    INSERT INTO Webhooks(
+    INSERT INTO webhooks(
       name, token,
       discord_server, discord_channel,
       channel_id,
@@ -103,13 +103,14 @@ export class Webhook {
     );
     `
     const stmt = getDb().prepare(insertQuery)
-    stmt.run(
+    const result = stmt.run(
       this.name, this.token,
       this.discordServer, this.discordChannel,
       this.channelId,
       this.registerIp, this.lastUseIp,
       this.ownerId
     )
+    this.id = result.lastInsertRowid
   }
 
   channel (): Channel {
@@ -117,30 +118,16 @@ export class Webhook {
   }
 }
 
-// TODO: admin front end
-// addNewWebhook({
-//   id: 0,
-//   name: 'test',
-//   token: 'xxx',
-//   discordServer: 'ddnet',
-//   discordChannel: 'off-topic',
-//   registerIp: '127.0.0.1',
-//   lastUseIp: '127.0.0.1',
-//   createdAt: 'now',
-//   updatedAt: 'now',
-//   ownerId: 0
-// })
-
 export interface IWebhookRow {
   ID: number,
   name: string,
   token: string,
   discord_server: string,
   discord_channel: string,
-  channel_id: number
+  channel_id: number | bigint
   register_ip: string,
   last_use_ip: string,
   created_at: string,
   updated_at: string,
-  owner_id: number
+  owner_id: number | bigint
 }

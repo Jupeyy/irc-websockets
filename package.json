@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc",
     "start": "tsc;node dist/index.js",
-    "db": "ts-node src/db/cli.ts"
+    "db": "ts-node src/db/cli.ts",
+    "seed": "ts-node src/db/seed.ts"
   },
   "repository": {
     "type": "git",

@@ -69,6 +69,13 @@ const main = (): void => {
     for(const arg of args) {
         if(arg === 'migrate') {
             actionMigrate()
+        } else if (arg === 'seed') {
+            console.log('too lazy to code this ...')
+            console.log('please just run this manually:')
+            console.log('')
+            console.log('  npm run seed')
+            console.log('')
+            exit(1)
         } else {
             usage()
             exit(1)
