@@ -147,6 +147,9 @@ export const onDiscordWebhookExecute = (webhookId: string, webhookToken: string,
 
 // curl -H "Content-Type: application/json" http://127.0.0.1:6969/channels/id/webhooks
 export const onDiscordGetChannelWebhooks = (channelId: string, req: Request, res: Response) => {
+  // TODO: authorization with bearer token
+  //       only admins of that channel should be able to list webhooks
+  //       https://discord.com/developers/docs/reference#authentication
   console.log(`[*] get channel webhooks channelId=${channelId}`)
 
   const channel = Channel.find(channelId)
