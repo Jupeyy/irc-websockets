@@ -9,6 +9,7 @@ import { IrcMessage } from '../socket.io';
 import { getNextMessageId } from '../history';
 import { getWebhook } from '../base/db';
 import { sendIrc } from '../irc';
+import { isRatelimited } from './rate_limit';
 
 export interface Webhook {
   id: number,
@@ -53,6 +54,12 @@ export const onDiscordWebhookExecute = (webhookId: string, webhookToken: string,
     channel: webhook.discordChannel,
     server: webhook.discordServer,
     date: new Date().toUTCString()
+  }
+
+  if (isRatelimited(message)) {
+    console.log(`[!] ratelimited webhook id=${webhook.id} '${webhook.name}' in '${message.server}#${message.channel}'`)
+    res.send({ message: 'TODO: this is not discord api yet. BUT ERROR ratelimited' })
+    return
   }
 
   if (!sendIrc(mapping.irc.serverName, mapping.irc.channel, messageContent)) {
