@@ -7,8 +7,6 @@ import { Channel } from "./channel"
 type WebhookColumn = 'ID'
   | 'name'
   | 'token'
-  | 'discord_server'
-  | 'discord_channel'
   | 'channel_id'
   | 'register_ip'
   | 'last_use_ip'
@@ -20,8 +18,6 @@ export class Webhook {
   id: number | bigint
   name: string
   token: string
-  discordServer: string
-  discordChannel: string
   channelId: number | bigint
   registerIp: string
   lastUseIp: string
@@ -33,8 +29,6 @@ export class Webhook {
     this.id = row.ID
     this.name = row.name
     this.token = row.token
-    this.discordServer = row.discord_server
-    this.discordChannel = row.discord_channel
     this.channelId = row.channel_id
     this.registerIp = row.register_ip
     this.lastUseIp = row.last_use_ip
@@ -91,13 +85,11 @@ export class Webhook {
     const insertQuery = `
     INSERT INTO webhooks(
       name, token,
-      discord_server, discord_channel,
       channel_id,
       register_ip, last_use_ip,
       created_at, updated_at,
       owner_id
     ) VALUES (
-      ?, ?,
       ?, ?,
       ?,
       ?, ?,
@@ -108,7 +100,6 @@ export class Webhook {
     const stmt = getDb().prepare(insertQuery)
     const result = stmt.run(
       this.name, this.token,
-      this.discordServer, this.discordChannel,
       this.channelId,
       this.registerIp, this.lastUseIp,
       this.ownerId
@@ -125,8 +116,6 @@ export interface IWebhookRow {
   ID: number,
   name: string,
   token: string,
-  discord_server: string,
-  discord_channel: string,
   channel_id: number | bigint
   register_ip: string,
   last_use_ip: string,

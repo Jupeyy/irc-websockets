@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS channels(
   description     TEXT        NOT NULL DEFAULT '',
   discord_server  TEXT        NOT NULL,
   discord_channel TEXT        NOT NULL,
+  channel_id      INTEGER     NOT NULL DEFAULT 0,
   irc_channel     TEXT        NOT NULL,
   irc_server_ip   TEXT        NOT NULL,
   irc_server_name TEXT        NOT NULL,

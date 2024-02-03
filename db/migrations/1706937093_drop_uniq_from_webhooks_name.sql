@@ -1,2 +1,0 @@
--- this does not work in sqlite3
--- ALTER TABLE webhooks DROP UNIQUE (name);
