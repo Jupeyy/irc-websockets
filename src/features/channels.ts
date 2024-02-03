@@ -1,7 +1,7 @@
 import { Socket } from "socket.io"
 import { getConnectedIrcChannels } from "../bridge_connections"
 import { getChannelUid } from "../history"
-import { User, getUsers } from "../users"
+import { SessionUser, getUsers } from "../session_users"
 import { sendTyping } from "./typing"
 import { WsState } from ".."
 import { JoinChannel } from "../socket.io"
@@ -60,7 +60,7 @@ export const onJoinChannel = (wsState: WsState, join: JoinChannel) => {
 }
 
 export const joinChannel = (socket: Socket, discordChannel: string, discordServer: string, _password: string = ''): boolean => {
-  const user: User = getUsers()[socket.id]
+  const user: SessionUser = getUsers()[socket.id]
   if (!user) {
     return false
   }

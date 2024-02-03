@@ -3,7 +3,7 @@ import { getConfig } from "../base/config"
 import { joinChannel } from "./channels"
 import { getWebsocket } from "../network/server"
 import { AuthRequest, IrcMessage, RegisterRequest } from "../socket.io"
-import { getUserByName, getUserBySocket, logoutUser, usernamePattern } from "../users"
+import { getUserByName, getUserBySocket, logoutUser, usernamePattern } from "../session_users"
 import { addNewUser, getUser, isUsernameTaken } from "../base/db"
 import { IUserRow } from "../models/user"
 

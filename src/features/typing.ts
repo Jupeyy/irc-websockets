@@ -4,9 +4,9 @@ import { ChannelMapping, getMappingByDiscord } from "./channels"
 import { getChannelUid } from "../history"
 import { getWebsocket } from "../network/server"
 import { TypingInfo, TypingState } from "../socket.io"
-import { User, getUserBySocket, getUsers } from "../users"
+import { SessionUser, getUserBySocket, getUsers } from "../session_users"
 
-export const sendTyping = (user: User, typing: boolean, server: string, channel: string) => {
+export const sendTyping = (user: SessionUser, typing: boolean, server: string, channel: string) => {
   user.isTyping = typing
   if (typing) {
     user.lastTyping = new Date()

@@ -6,7 +6,7 @@ import { getDiscordChannels } from '../features/channels';
 import { getConfig } from '../base/config';
 import { MessageLogOptions, getMessages } from '../history';
 import { getExpress } from './server';
-import { getUsers, logoutUser } from '../users';
+import { getUsers, logoutUser } from '../session_users';
 import { IrcMessage } from '../socket.io';
 import { onDiscordGetChannelWebhooks, onDiscordWebhookExecute } from '../features/webhooks';
 const cors = require('cors')

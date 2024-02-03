@@ -1,6 +1,6 @@
 import { Socket } from 'socket.io'
 import { ClientToServerEvents, ServerToClientEvents, IrcMessage, AuthRequest, JoinChannel, TypingInfo, RegisterRequest } from './socket.io'
-import { User, getUserBySocket, getUsers } from './users';
+import { SessionUser, getUserBySocket, getUsers } from './session_users';
 import { getWebsocket } from './network/server';
 import { onAuthRequest, onRegisterRequest } from './features/accounts';
 import { generateToken } from './base/token';
@@ -68,7 +68,7 @@ getWebsocket().on('connection', (socket: Socket<ClientToServerEvents, ServerToCl
       socket
     }
     console.log(`[*] connect ${ipAddr} ${userAgent}`)
-    const user: User = {
+    const user: SessionUser = {
       username: 'connecting',
       sessionToken: generateToken(32),
       socket: socket,
@@ -92,7 +92,7 @@ getWebsocket().on('connection', (socket: Socket<ClientToServerEvents, ServerToCl
       delete getUsers()[socket.id]
     })
 
-    socket.on('joinChannel', (join: JoinChannel): void => {  
+    socket.on('joinChannel', (join: JoinChannel): void => {
       onJoinChannel(wsState, join)
     })
 
