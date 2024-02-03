@@ -34,7 +34,7 @@ const getMigrationsFolder = (): string => {
     return path.join(__dirname, '..', '..', 'db', 'migrations')
 }
 
-const actionMigrate = (): void => {
+const actionMigrate = (flagForce: boolean): void => {
     const latestTs = getDbVersion()
     const files = readdirSync(getMigrationsFolder())
     for(const file of files) {
@@ -49,6 +49,22 @@ const actionMigrate = (): void => {
         }
         console.log(`[*] applying ${file} ...`)
         const sqlCommand = readFileSync(path.join(getMigrationsFolder(), file), { encoding: 'utf8', flag: 'r' })
+        if(sqlCommand.toLowerCase().includes('warning')) {
+            if(!flagForce) {
+                console.log('[!] Found warning in migration. Aborting ...')
+                console.log('[!] Please inspect the migration file and check the warning')
+                console.log('[!] Then if you still want to run the migration run it with --force')
+                exit(1)
+            }
+        }
+        if(sqlCommand.toLowerCase().includes('drop table')) {
+            if(!flagForce) {
+                console.log('[!] Found DROP TABLE in migration. Aborting ...')
+                console.log('[!] Please inspect the migration file and verify you will not lose important data')
+                console.log('[!] Then if you still want to run the migration run it with --force')
+                exit(1)
+            }
+        }
         db.exec(sqlCommand)
         setDbVersion(fileTs)
     }
@@ -65,10 +81,16 @@ const main = (): void => {
     // hack to get only args passed to script
     // no matter if compiled or not
     // run directly or with ts-node
+    let action = ''
+    let flagForce = false
     while(!args.shift()?.endsWith(path.basename(__filename))) {}
     for(const arg of args) {
-        if(arg === 'migrate') {
-            actionMigrate()
+        if(['migrate'].includes(arg)) {
+            if (action !== '') {
+                console.log(`Error: unexpected argument '${arg}'`)
+                exit(1)
+            }
+            action = arg
         } else if (arg === 'seed') {
             console.log('too lazy to code this ...')
             console.log('please just run this manually:')
@@ -76,10 +98,15 @@ const main = (): void => {
             console.log('  npm run seed')
             console.log('')
             exit(1)
+        } else if(arg === '--force') {
+            flagForce = true
         } else {
             usage()
             exit(1)
         }
+    }
+    if (action === 'migrate') {
+        actionMigrate(flagForce)
     }
     if(args.length === 0) {
         usage()
