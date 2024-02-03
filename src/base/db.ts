@@ -15,7 +15,7 @@ try {
 }
 
 export const addNewUser = (username: string, password: string, ipAddr: string) => {
-  const insertQuery = `INSERT INTO Accounts(
+  const insertQuery = `INSERT INTO users(
     username, password, register_ip, login_ip, created_at, updated_at, is_admin
   ) VALUES (?, ? , ?, ?, DateTime('now'), DateTime('now'), ?);
   `
@@ -30,7 +30,7 @@ export const addNewUser = (username: string, password: string, ipAddr: string) =
 }
 
 export const isUsernameTaken = (username: string): boolean => {
-  const row = db.prepare('SELECT * FROM accounts WHERE username = ?').get(username)
+  const row = db.prepare('SELECT * FROM users WHERE username = ?').get(username)
   if(!row) {
     return false
   }
@@ -39,7 +39,7 @@ export const isUsernameTaken = (username: string): boolean => {
 
 export const getUser = (username: string, password: string): null | IUserRow => {
   const row: undefined | IUserRow = db.
-    prepare('SELECT * FROM accounts WHERE username = ? AND password = ?')
+    prepare('SELECT * FROM users WHERE username = ? AND password = ?')
     .get(username, password) as undefined | IUserRow
   if(!row) {
     return null

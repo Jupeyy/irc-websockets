@@ -18,7 +18,7 @@ console.log('[irc-websockets] * there is no rollback or safe mode               
 console.log('[irc-websockets] **************************************************************')
 console.log('[irc-websockets] use db. or getDb(). to access the database. For example:')
 console.log("[irc-websockets]")
-console.log("[irc-websockets]   db.prepare('SELECT * FROM accounts WHERE ID = 1').all()")
+console.log("[irc-websockets]   db.prepare('SELECT * FROM users WHERE ID = 1').all()")
 console.log("[irc-websockets]")
 console.log("[irc-websockets] You have access to all the models. You can use them like this:")
 console.log("[irc-websockets]")
