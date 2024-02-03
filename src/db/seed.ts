@@ -22,8 +22,6 @@ const webhook = new Webhook({
   ID: 0,
   name: 'ttxxxxxxt',
   token: 'xxx',
-  discord_server: 'ddnet',
-  discord_channel: 'off-topic',
   channel_id: channel.id,
   register_ip: '127.0.0.1',
   last_use_ip: '127.0.0.1',
