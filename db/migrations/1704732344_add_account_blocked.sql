@@ -1,2 +1,0 @@
--- TODO: remove this this is just here so i do not have to duckduckgo alter table again
--- ALTER TABLE Accounts ADD COLUMN blocked INTEGER NOT NULL default 0;

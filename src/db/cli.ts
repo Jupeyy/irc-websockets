@@ -53,7 +53,10 @@ const actionMigrate = (flagForce: boolean): void => {
             if(!flagForce) {
                 console.log('[!] Found warning in migration. Aborting ...')
                 console.log('[!] Please inspect the migration file and check the warning')
-                console.log('[!] Then if you still want to run the migration run it with --force')
+                console.log('[!] Then if you still want to run the migration run the following command')
+                console.log('[!]')
+                console.log('[!]   npm run -- db migrate --force')
+                console.log('[!]')
                 exit(1)
             }
         }
@@ -61,7 +64,10 @@ const actionMigrate = (flagForce: boolean): void => {
             if(!flagForce) {
                 console.log('[!] Found DROP TABLE in migration. Aborting ...')
                 console.log('[!] Please inspect the migration file and verify you will not lose important data')
-                console.log('[!] Then if you still want to run the migration run it with --force')
+                console.log('[!] Then if you still want to run the migration run the following command')
+                console.log('[!]')
+                console.log('[!]   npm run -- db migrate --force')
+                console.log('[!]')
                 exit(1)
             }
         }
