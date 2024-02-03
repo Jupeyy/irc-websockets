@@ -5,6 +5,7 @@ import { SessionUser, getUsers } from "../session_users"
 import { sendTyping } from "./typing"
 import { WsState } from ".."
 import { JoinChannel } from "../socket.io"
+import { Channel } from "../models/channel"
 
 export interface ChannelMapping {
   irc: {
@@ -42,19 +43,37 @@ export const activeIrcChannels = (): string[] => {
 }
 
 export const onJoinChannel = (wsState: WsState, join: JoinChannel) => {
+  // TODO: the whole thing is total bs conceptually
+  //       we should not keep the legacy object with channel mappings in the code
+  //       the protocol should not contain strings but only channel ids in the first place
+  //       we want to stay close to the discord api
+  //       and we also want to use the database as cleanly as possibly
+  const channel = Channel.findByDiscordNames(join.server, join.channel)
+  if (!channel || !channel.id) {
+    wsState.socket.emit('joinChannelResponse', {
+      message: 'channel is not in database',
+      success: false,
+      server: join.server,
+      channel: join.channel,
+      channelId: 0
+    })
+    return
+  }
   if (!joinChannel(wsState.socket, join.channel, join.server, join.password)) {
     wsState.socket.emit('joinChannelResponse', {
       message: 'failed to join channel',
       success: false,
       server: join.server,
-      channel: join.channel
+      channel: join.channel,
+      channelId: channel.id
     })
   } else {
     wsState.socket.emit('joinChannelResponse', {
       message: '',
       success: true,
       server: join.server,
-      channel: join.channel
+      channel: join.channel,
+      channelId: channel.id
     })
   }
 }
