@@ -6,8 +6,8 @@ const channel = new Channel({
   name: 'seed-channel',
   description: 'test description',
   discord_server: 'ddnet',
-  discord_channel: 'general',
-  irc_channel: 'ddnet-general',
+  discord_channel: 'off-topic',
+  irc_channel: 'ddnet-off-topic',
   irc_server_ip: 'stockholm.se.quakenet.org',
   irc_server_name: 'quakenet',
   owner_id: 0

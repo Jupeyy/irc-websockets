@@ -71,7 +71,7 @@ const popQueueEntry = (): void => {
 
 setInterval(popQueueEntry, 1000)
 
-// curl -H "Content-Type: application/json" -X POST --data '{"content": "Posted Via Command line"}' http://127.0.0.1:6969/webhooks/id/token
+// curl -H "Content-Type: application/json" -X POST --data '{"content": "Posted Via Command line"}' http://127.0.0.1:6969/webhooks/1/xxx
 export const onDiscordWebhookExecute = (webhookId: string, webhookToken: string, req: Request, res: Response) => {
   console.log(`[*] webhook: ${req} id=${webhookId} token=${webhookToken}`)
 
@@ -81,72 +81,74 @@ export const onDiscordWebhookExecute = (webhookId: string, webhookToken: string,
     return
   }
 
-  res.send({ message: 'TODO channel = webhook.channel()' })
-  return;
+  const channel = webhook.channel()
+  if(!channel) {
+    res.send({ message: 'TODO: this is not discord api yet. BUT ERROR your webhook is not attached to any channel' })
+    return
+  }
 
+  const mapping: ChannelMapping | null = getMappingByDiscord(channel.discordServer, channel.discordChannel)
+  if (!mapping) {
+    console.log(`[!] invalid discord mapping '${channel.discordServer}#${channel.discordChannel}'`)
+    res.send({ message: 'TODO: this is not discord api yet. BUT ERROR mapping' })
+    return
+  }
+  // https://discord.com/developers/docs/resources/webhook#execute-webhook
+  const messageContent = req.body.content
+  if(!messageContent) {
+    res.send({ message: 'TODO: this is not discord api yet. BUT ERROR msg empty' })
+    return
+  }
 
-  // const mapping: ChannelMapping | null = getMappingByDiscord(webhook.discordServer, webhook.discordChannel)
-  // if (!mapping) {
-  //   console.log(`[!] invalid discord mapping '${webhook.discordServer}#${webhook.discordChannel}'`)
-  //   res.send({ message: 'TODO: this is not discord api yet. BUT ERROR' })
-  //   return
-  // }
-  // // https://discord.com/developers/docs/resources/webhook#execute-webhook
-  // const messageContent = req.body.content
-  // if(!messageContent) {
-  //   res.send({ message: 'TODO: this is not discord api yet. BUT ERROR msg empty' })
-  //   return
-  // }
+  const message: IrcMessage = {
+    id: getNextMessageId(),
+    from: webhook.name,
+    message: messageContent,
+    channel: channel.discordChannel,
+    server: channel.discordServer,
+    date: new Date().toUTCString()
+  }
 
-  // const message: IrcMessage = {
-  //   id: getNextMessageId(),
-  //   from: webhook.name,
-  //   message: messageContent,
-  //   channel: webhook.discordChannel,
-  //   server: webhook.discordServer,
-  //   date: new Date().toUTCString()
-  // }
+  if(message.message.includes("\n")) {
+    if(queueFull()) {
+      console.log(`[!] webhook failed to send. Queue is full ${newlineQueue.length}/${getMaxQueueSize()}`)
+      res.send({ message: 'TODO: this is not discord api yet. BUT ERROR queue is full' })
+      return
+    }
+    const messageLines = message.message.split("\n")
+    if(messageLines.length > getMaxQueueSize()) {
+      console.log(`[!] webhook tried to send message with too many lines. Clamped to max=${getMaxQueueSize()}`)
+      res.send({ message: 'TODO: this is not discord api yet. BUT WARNING too many lines will only be sent partially' })
+    } else {
+      res.send({ message: 'TODO: this is not discord api yet. But OK' })
+    }
+    messageLines.forEach((messageLine) => {
+      const splitIrcMsg: IrcMessage = {
+        id: getNextMessageId(), // could also be message.id
+        from: message.from,
+        message: messageLine,
+        channel: message.channel,
+        server: message.server,
+        date: message.date // could also be new Date().toUTCString()
+      }
+      queueLine(splitIrcMsg, mapping)
+    })
+    return
+  }
 
-  // if(message.message.includes("\n")) {
-  //   if(queueFull()) {
-  //     console.log(`[!] webhook failed to send. Queue is full ${newlineQueue.length}/${getMaxQueueSize()}`)
-  //     res.send({ message: 'TODO: this is not discord api yet. BUT ERROR queue is full' })
-  //     return
-  //   }
-  //   const messageLines = message.message.split("\n")
-  //   if(messageLines.length > getMaxQueueSize()) {
-  //     console.log(`[!] webhook tried to send message with too many lines. Clamped to max=${getMaxQueueSize()}`)
-  //     res.send({ message: 'TODO: this is not discord api yet. BUT WARNING too many lines will only be sent partially' })
-  //   } else {
-  //     res.send({ message: 'TODO: this is not discord api yet. But OK' })
-  //   }
-  //   messageLines.forEach((messageLine) => {
-  //     const splitIrcMsg: IrcMessage = {
-  //       id: getNextMessageId(), // could also be message.id
-  //       from: message.from,
-  //       message: messageLine,
-  //       channel: message.channel,
-  //       server: message.server,
-  //       date: message.date // could also be new Date().toUTCString()
-  //     }
-  //     queueLine(splitIrcMsg, mapping)
-  //   })
-  //   return
-  // }
+  if (isRatelimited(message)) {
+    console.log(`[!] ratelimited webhook id=${webhook.id} '${webhook.name}' in '${message.server}#${message.channel}'`)
+    res.send({ message: 'TODO: this is not discord api yet. BUT ERROR ratelimited' })
+    return
+  }
 
-  // if (isRatelimited(message)) {
-  //   console.log(`[!] ratelimited webhook id=${webhook.id} '${webhook.name}' in '${message.server}#${message.channel}'`)
-  //   res.send({ message: 'TODO: this is not discord api yet. BUT ERROR ratelimited' })
-  //   return
-  // }
+  if (!sendIrc(mapping.irc.serverName, mapping.irc.channel, message.message)) {
+    res.send({ message: 'TODO: this is not discord api yet. ERROR FAILED TO irc' })
+    return
+  }
+  addMessage(mapping, message)
 
-  // if (!sendIrc(mapping.irc.serverName, mapping.irc.channel, message.message)) {
-  //   res.send({ message: 'TODO: this is not discord api yet. ERROR FAILED TO irc' })
-  //   return
-  // }
-  // addMessage(mapping, message)
-
-  // res.send({ message: 'TODO: this is not discord api yet. But OK' })
+  res.send({ message: 'TODO: this is not discord api yet. But OK' })
 }
 
 /**
