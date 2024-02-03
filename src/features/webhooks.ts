@@ -145,12 +145,73 @@ export const onDiscordWebhookExecute = (webhookId: string, webhookToken: string,
   res.send({ message: 'TODO: this is not discord api yet. But OK' })
 }
 
-// curl -H "Content-Type: application/json" http://127.0.0.1:6969/channels/id/webhooks
+/**
+ * getBearerOrSendError
+ *
+ * extract bearer token from request header
+ * or send error response
+ *
+ * @param req
+ * @param res
+ * @returns token or null
+ */
+const getBearerOrSendError = (req: Request, res: Response): string | null => {
+  const authHeader = req.headers.authorization
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    const error = {
+      error: {
+        note: 'TODO: this is not discord compatible yet',
+        message: 'missing bearer auth header'
+      }
+    }
+    res.send(JSON.stringify(error))
+    return null
+  }
+  return authHeader.slice('Bearer '.length)
+}
+
+/**
+ * checkBearerAuth
+ *
+ * checks if the request header contains a valid bearer token
+ * if it does not it sends a error response
+ *
+ * TODO: this is authentication only for now
+ *       there is no scope/resource or authorization yet
+ *
+ * @param req
+ * @param res
+ * @returns true on success
+ */
+const checkBearerAuth = (req: Request, res: Response): boolean => {
+  const token = getBearerOrSendError(req, res)
+  if(!token) {
+    return false
+  }
+  // TODO: actually look it up in some db or something
+  if(token !== 'xxx') {
+    const error = {
+      error: {
+        note: 'TODO: this is not discord compatible yet',
+        message: 'wrong auth credentials'
+      }
+    }
+    res.send(JSON.stringify(error))
+    return false
+  }
+  return true
+}
+
+// curl -H "Authorization: Bearer xxx" -H "Content-Type: application/json" http://127.0.0.1:6969/channels/1/webhooks
 export const onDiscordGetChannelWebhooks = (channelId: string, req: Request, res: Response) => {
   // TODO: authorization with bearer token
   //       only admins of that channel should be able to list webhooks
   //       https://discord.com/developers/docs/reference#authentication
   console.log(`[*] get channel webhooks channelId=${channelId}`)
+
+  if(!checkBearerAuth(req, res)) {
+    return
+  }
 
   const channel = Channel.find(channelId)
   if(!channel) {
