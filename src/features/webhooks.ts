@@ -224,8 +224,33 @@ export const onDiscordGetChannelWebhooks = (channelId: string, req: Request, res
     res.send({ message: 'TODO: this is not discord api yet. BUT ERROR channel not found' })
     return
   }
+
   // we are close but not fully discord compatible yet
   // should be an array of these objects
   // https://discord.com/developers/docs/resources/webhook#webhook-object
-  res.send(channel.webhooks())
+
+  // Type	Description
+  // id	snowflake	the id of the webhook
+  // type	integer	the type of the webhook
+  // guild_id?	?snowflake	the guild id this webhook is for, if any
+  // channel_id	?snowflake	the channel id this webhook is for, if any
+  // user?	user object	the user this webhook was created by (not returned when getting a webhook with its token)
+  // name	?string	the default name of the webhook
+  // avatar	?string	the default user avatar hash of the webhook
+  // token?	string	the secure token of the webhook (returned for Incoming Webhooks)
+  // application_id	?snowflake	the bot/OAuth2 application that created this webhook
+  // source_guild? *	partial guild object	the guild of the channel that this webhook is following (returned for Channel Follower Webhooks)
+  // source_channel? *	partial channel object	the channel that this webhook is following (returned for Channel Follower Webhooks)
+  // url?	string	the url used for executing the webhook (returned by the webhooks OAuth2 flow)
+
+  res.send(channel.webhooks().map((webhook) => {
+    return {
+      id: webhook.id,
+      type: 0, // Incoming
+      channel_id: channel.id,
+      name: webhook.name,
+      avatar: null,
+      application_id: null
+    }
+  }))
 }
