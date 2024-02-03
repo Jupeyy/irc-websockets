@@ -10,6 +10,6 @@ CREATE TABLE IF NOT EXISTS channels(
   irc_server_name TEXT        NOT NULL,
   created_at      TEXT        NOT NULL,
   updated_at      TEXT        NOT NULL,
-  private         INTEGER     NOT NULL DEFAULT 0,
+  is_private      INTEGER     NOT NULL DEFAULT 0,
   owner_id        INTEGER     NOT NULL
 );

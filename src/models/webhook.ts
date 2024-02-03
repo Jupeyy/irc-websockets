@@ -14,30 +14,72 @@ type WebhookColumn = 'ID'
   | 'updated_at'
   | 'owner_id'
 
+export interface IWebhookConstructor {
+  ID?: number | bigint | null
+  name: string
+  token: string
+  channel_id: number | bigint
+  register_ip: string
+  last_use_ip: string
+  created_at?: string | null
+  updated_at?: string | null
+  owner_id: number | bigint
+}
+
 export class Webhook {
-  id: number | bigint
+  id: number | bigint | null
   name: string
   token: string
   channelId: number | bigint
   registerIp: string
   lastUseIp: string
-  createdAt: string
-  updatedAt: string
+  createdAt: string | null
+  updatedAt: string | null
   ownerId: number | bigint
 
-  constructor(row: IWebhookRow) {
-    this.id = row.ID
+  constructor(row: IWebhookConstructor) {
+    this.id = row.ID || null
     this.name = row.name
     this.token = row.token
     this.channelId = row.channel_id
     this.registerIp = row.register_ip
     this.lastUseIp = row.last_use_ip
-    this.createdAt = row.created_at
-    this.updatedAt = row.updated_at
+    this.createdAt = row.created_at || null
+    this.updatedAt = row.updated_at || null
     this.ownerId = row.owner_id
   }
 
-  static find (webhookId: number | string, token: string): null | Webhook {
+  static find (id: number): null | Webhook {
+    const row: undefined | IWebhookRow = getDb().
+      prepare('SELECT * FROM webhooks WHERE ID = ?')
+      .get(id) as undefined | IWebhookRow
+    if(!row) {
+      return null
+    }
+    return new Webhook(row)
+  }
+
+  static first (): null | Webhook {
+    const row: undefined | IWebhookRow = getDb().
+      prepare('SELECT * FROM webhooks ORDER BY ID ASC LIMIT 1')
+      .get() as undefined | IWebhookRow
+    if(!row) {
+      return null
+    }
+    return new Webhook(row)
+  }
+
+  static last (): null | Webhook {
+    const row: undefined | IWebhookRow = getDb().
+      prepare('SELECT * FROM webhooks ORDER BY ID DESC LIMIT 1')
+      .get() as undefined | IWebhookRow
+    if(!row) {
+      return null
+    }
+    return new Webhook(row)
+  }
+
+  static findByCredentials (webhookId: number | string, token: string): null | Webhook {
     const row: undefined | IWebhookRow = getDb().
       prepare('SELECT * FROM webhooks WHERE ID = ? AND token = ?')
       .get(webhookId, token) as undefined | IWebhookRow

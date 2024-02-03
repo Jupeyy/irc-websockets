@@ -14,21 +14,6 @@ try {
   process.exit(1)
 }
 
-export const addNewUser = (username: string, password: string, ipAddr: string) => {
-  const insertQuery = `INSERT INTO users(
-    username, password, register_ip, login_ip, created_at, updated_at, is_admin
-  ) VALUES (?, ? , ?, ?, DateTime('now'), DateTime('now'), ?);
-  `
-  const stmt = db.prepare(insertQuery)
-  stmt.run(
-    username,
-    password,
-    ipAddr,
-    ipAddr,
-    0
-  )
-}
-
 export const isUsernameTaken = (username: string): boolean => {
   const row = db.prepare('SELECT * FROM users WHERE username = ?').get(username)
   if(!row) {

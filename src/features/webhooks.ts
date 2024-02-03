@@ -75,7 +75,7 @@ setInterval(popQueueEntry, 1000)
 export const onDiscordWebhookExecute = (webhookId: string, webhookToken: string, req: Request, res: Response) => {
   console.log(`[*] webhook: ${req} id=${webhookId} token=${webhookToken}`)
 
-  const webhook = Webhook.find(webhookId, webhookToken)
+  const webhook = Webhook.findByCredentials(webhookId, webhookToken)
   if(!webhook) {
     res.send({ message: 'TODO: this is not discord api yet. BUT ERROR 404' })
     return

@@ -28,6 +28,12 @@ console.log("[irc-websockets]")
 const replServer = repl.start({
   prompt: '> '
 })
+replServer.setupHistory(path.join(__dirname, '.console_history'), (err) => {
+  if(err) {
+    console.log(`[!] failed to save history`)
+    console.log(err)
+  }
+})
 
 // use either db. or getDb(). in global repl scope
 // to access the database

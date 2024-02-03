@@ -1,8 +1,23 @@
 import { getDb } from "../base/db"
 import { Webhook } from "./webhook"
 
+export interface IChannelConstructor {
+  ID?: number | bigint | null
+  name: string
+  description?: string
+  discord_server: string
+  discord_channel: string
+  irc_channel: string
+  irc_server_ip: string
+  irc_server_name: string
+  created_at?: string
+  updated_at?: string
+  is_private?: number
+  owner_id: number
+}
+
 export class Channel {
-  id: number | bigint
+  id: number | bigint | null
   name: string
   description: string
   discordServer: string
@@ -10,24 +25,24 @@ export class Channel {
   ircChannel: string
   ircServerIp: string
   ircServerName: string
-  createdAt: string
-  updatedAt: string
-  private: number
+  createdAt: string | null
+  updatedAt: string | null
+  isPrivate: number
   ownerId: number
 
-  constructor(row: IChannelRow) {
-    this.id = row.ID
-    this.name = row.name
-    this.description = row.description
-    this.discordServer = row.discord_server
-    this.discordChannel = row.discord_channel
-    this.ircChannel = row.irc_channel
-    this.ircServerIp = row.irc_server_ip
-    this.ircServerName = row.irc_server_name
-    this.createdAt = row.created_at
-    this.updatedAt = row.updated_at
-    this.private = row.private
-    this.ownerId = row.owner_id
+  constructor(columns: IChannelConstructor) {
+    this.id = columns.ID || null
+    this.name = columns.name
+    this.description = columns.description || ''
+    this.discordServer = columns.discord_server
+    this.discordChannel = columns.discord_channel
+    this.ircChannel = columns.irc_channel
+    this.ircServerIp = columns.irc_server_ip
+    this.ircServerName = columns.irc_server_name
+    this.createdAt = columns.created_at || null
+    this.updatedAt = columns.updated_at || null
+    this.isPrivate = columns.is_private || 0
+    this.ownerId = columns.owner_id
   }
 
   insert (): void {
@@ -37,7 +52,7 @@ export class Channel {
       discord_server, discord_channel,
       irc_channel, irc_server_ip, irc_server_name,
       created_at, updated_at,
-      private, owner_id
+      is_private, owner_id
     ) VALUES (
       ?, ?,
       ?, ?,
@@ -66,7 +81,30 @@ export class Channel {
     return new Channel(row)
   }
 
+  static first (): null | Channel {
+    const row: undefined | IChannelRow = getDb().
+      prepare('SELECT * FROM channels ORDER BY ID ASC LIMIT 1')
+      .get() as undefined | IChannelRow
+    if(!row) {
+      return null
+    }
+    return new Channel(row)
+  }
+
+  static last (): null | Channel {
+    const row: undefined | IChannelRow = getDb().
+      prepare('SELECT * FROM channels ORDER BY ID DESC LIMIT 1')
+      .get() as undefined | IChannelRow
+    if(!row) {
+      return null
+    }
+    return new Channel(row)
+  }
+
   webhooks (): Webhook[] {
+    if(!this.id) {
+      return []
+    }
     return Webhook.where('channel_id', this.id)
   }
 }
@@ -82,6 +120,6 @@ export interface IChannelRow {
   irc_server_name: string,
   created_at: string,
   updated_at: string,
-  private: number,
+  is_private: number,
   owner_id: number
 }

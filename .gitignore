@@ -11,4 +11,5 @@ dist/
 db/.gitignore
 db/README.md
 message_log.json
+console/.console_history
 

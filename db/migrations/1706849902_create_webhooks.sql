@@ -1,11 +1,8 @@
--- TODO: create Channels table and use its id
---        instead of `discord_server` and `discord_channel`
 CREATE TABLE IF NOT EXISTS webhooks(
   ID              INTEGER PRIMARY KEY AUTOINCREMENT,
-  name            TEXT UNIQUE NOT NULL, -- TODO: remove unique constraint
+  name            TEXT        NOT NULL,
   token           TEXT        NOT NULL,
-  discord_server  TEXT        NOT NULL,
-  discord_channel TEXT        NOT NULL,
+  channel_id      INTEGER     NOT NULL,
   register_ip     TEXT        NOT NULL,
   last_use_ip     TEXT        NOT NULL,
   created_at      TEXT        NOT NULL,

@@ -4,8 +4,8 @@ import { joinChannel } from "./channels"
 import { getWebsocket } from "../network/server"
 import { AuthRequest, IrcMessage, RegisterRequest } from "../socket.io"
 import { getUserByName, getUserBySocket, logoutUser, usernamePattern } from "../session_users"
-import { addNewUser, getUser, isUsernameTaken } from "../base/db"
-import { IUserRow } from "../models/user"
+import { getUser, isUsernameTaken } from "../base/db"
+import { IUserRow, User } from "../models/user"
 
 export const useAccounts = (): boolean => {
   return getConfig().requirePasswords
@@ -89,7 +89,12 @@ export const onRegisterRequest = (wsState: WsState, register: RegisterRequest) =
     return
   }
   console.log(`[*] register success username=${register.username}`)
-  addNewUser(register.username, register.password, wsState.ipAddr)
+  const user = new User({
+    username: register.username,
+    password: register.password,
+    register_ip: wsState.ipAddr
+  })
+  user.insert()
   wsState.socket.emit(
     'authResponse',
     {
