@@ -9,5 +9,6 @@ dist/
 *.db
 *.sqlite3
 db/.gitignore
+db/README.md
 message_log.json
 
