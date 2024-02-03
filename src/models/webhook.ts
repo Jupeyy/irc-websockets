@@ -123,6 +123,16 @@ export class Webhook {
     return rows.map((row) => new Webhook(row))
   }
 
+  static all (): Webhook[] {
+    const rows: undefined | IWebhookRow[] = getDb().
+      prepare('SELECT * FROM webhooks')
+      .all() as undefined | IWebhookRow[]
+    if(!rows) {
+      return []
+    }
+    return rows.map((row) => new Webhook(row))
+  }
+
   insert (): void {
     const insertQuery = `
     INSERT INTO webhooks(

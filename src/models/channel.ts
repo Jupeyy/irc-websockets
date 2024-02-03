@@ -72,10 +72,10 @@ export class Channel {
 
     this.errors = []
 
-    if (!/^[a-z_-]$/.test(this.discordChannel)) {
-      this.errors.push('invalid characters in discord channel')
+    if (!/^[a-z_-]+$/.test(this.discordChannel)) {
+      this.errors.push(`invalid characters in discord channel '${this.discordChannel}'`)
     }
-    if (!/^[a-z_-]$/.test(this.discordServer)) {
+    if (!/^[a-z_-]+$/.test(this.discordServer)) {
       this.errors.push('invalid characters in discord server')
     }
 
@@ -84,7 +84,7 @@ export class Channel {
 
   insert (): Channel | boolean {
     if (!this.valid()) {
-      // throw Error(this.errors.join(','))
+      throw Error(this.errors.join(','))
       return false
     }
     const insertQuery = `

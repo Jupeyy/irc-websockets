@@ -5,7 +5,7 @@
 import { Request, Response } from 'express';
 import { ChannelMapping, getMappingByDiscord } from './channels';
 import { addMessage } from './messages';
-import { IrcMessage } from '../socket.io';
+import { IrcMessage, WebhookObject } from '../socket.io';
 import { getNextMessageId } from '../history';
 import { sendIrc } from '../irc';
 import { isRatelimited } from './rate_limit';
@@ -244,13 +244,14 @@ export const onDiscordGetChannelWebhooks = (channelId: string, req: Request, res
   // url?	string	the url used for executing the webhook (returned by the webhooks OAuth2 flow)
 
   res.send(channel.webhooks().map((webhook) => {
-    return {
-      id: webhook.id,
+    const webhookObject: WebhookObject = {
+      id: webhook.id!,
       type: 0, // Incoming
-      channel_id: channel.id,
+      channel_id: channel.id!,
       name: webhook.name,
       avatar: null,
       application_id: null
     }
+    return webhookObject
   }))
 }

@@ -9,6 +9,8 @@ if (!process.env.IRC_CHANNEL) {
 export const getConnectedIrcChannels = (): ChannelMapping[] => {
   return Channel.all().map((channel) => {
     const mapping: ChannelMapping = {
+      id: channel.id!,
+      description: channel.description,
       irc: {
         serverIp: channel.ircServerIp,
         serverName: channel.ircServerName,
@@ -28,6 +30,8 @@ if (getConnectedIrcChannels().filter((entry) => entry.irc.channel === process.en
   console.log(`[*] adding custom channel '${process.env.IRC_CHANNEL}'`)
   getConnectedIrcChannels().push(
     {
+      id: 0,
+      description: '',
       irc: {
         serverIp: 'stockholm.se.quakenet.org',
         serverName: 'quakenet',

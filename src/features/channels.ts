@@ -4,10 +4,15 @@ import { getChannelUid } from "../history"
 import { SessionUser, getUsers } from "../session_users"
 import { sendTyping } from "./typing"
 import { WsState } from ".."
-import { JoinChannel } from "../socket.io"
+import { ChannelInfo, JoinChannel } from "../socket.io"
 import { Channel } from "../models/channel"
 
+// TODO: we should probably get rid of ChannelMapping
+//       thats just some legacy type that is now wrapping around the
+//       new cleaner `Channel` model
 export interface ChannelMapping {
+  id: number | bigint,
+  description: string,
   irc: {
     serverIp: string,
     serverName: string,
@@ -33,9 +38,15 @@ export const isValidDiscordChannel = (discordServer: string, discordChannel: str
   return matches.length === 1
 }
 
-export const getDiscordChannels = (discordServerName: string): string[] => {
+export const getDiscordChannels = (discordServerName: string): ChannelInfo[] => {
   const serverEntries = getConnectedIrcChannels().filter((entry) => entry.discord.server === discordServerName)
-  return serverEntries.map((entry) => entry.discord.channel)
+  return serverEntries.map((entry) => {
+    return {
+      id: entry.id,
+      name: entry.discord.channel,
+      description: entry.description
+    }
+  })
 }
 
 export const activeIrcChannels = (): string[] => {
@@ -88,7 +99,7 @@ export const joinChannel = (socket: Socket, discordChannel: string, discordServe
   }
   const mapping: ChannelMapping | null = getMappingByDiscord(discordServer, discordChannel)
   if (!mapping) {
-    console.log(`[!] invalid discord mapping '${discordServer}#${discordChannel}'`)
+    console.log(`[!][join-channel] invalid discord mapping '${discordServer}#${discordChannel}'`)
     return false
   }
   sendTyping(user, false, user.activeServer, user.activeChannel)
