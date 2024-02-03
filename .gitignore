@@ -8,5 +8,6 @@ dist/
 *-wal
 *.db
 *.sqlite3
+db/.gitignore
 message_log.json
 
