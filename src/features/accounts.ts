@@ -112,7 +112,7 @@ export const onAuthRequest = (wsState: WsState, auth: AuthRequest) => {
     return
   }
   if (dbUser) {
-    if (dbUser.blocked === 1) {
+    if (dbUser.is_blocked) {
       authError(wsState, 'this account is blocked')
       return
     }

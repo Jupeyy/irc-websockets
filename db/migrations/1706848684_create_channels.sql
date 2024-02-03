@@ -11,4 +11,4 @@ CREATE TABLE IF NOT EXISTS channels(
   updated_at      TEXT        NOT NULL,
   private         INTEGER     NOT NULL DEFAULT 0,
   owner_id        INTEGER     NOT NULL
-)
+);

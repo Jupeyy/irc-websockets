@@ -14,7 +14,7 @@ type WebhookColumn = 'ID'
   | 'last_use_ip'
   | 'created_at'
   | 'updated_at'
-  'owner_id'
+  | 'owner_id'
 
 export class Webhook {
   id: number | bigint

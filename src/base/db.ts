@@ -1,5 +1,4 @@
 import Database from 'better-sqlite3'
-import { IWebhookRow, Webhook } from '../models/webhook'
 import { IUserRow } from '../models/user'
 const db = new Database('./db/main.db')
 db.pragma('journal_mode = WAL')
@@ -8,7 +7,7 @@ try {
   // TODO: read own source code or use db cli to find latest migration timestamp
   //       and verify that is set
   //       otherwise accounts might exist but newer migrations are missing
-  db.exec('SELECT * FROM channels LIMIT 1')
+  db.exec('SELECT * FROM users WHERE is_blocked = 0 LIMIT 1')
 } catch (SqliteError) {
   console.log(`[!] Error: test select failed`)
   console.log(`[!]        try running 'npm run db migrate'`)

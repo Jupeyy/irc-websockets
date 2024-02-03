@@ -11,4 +11,4 @@ CREATE TABLE IF NOT EXISTS webhooks(
   created_at      TEXT        NOT NULL,
   updated_at      TEXT        NOT NULL,
   owner_id        INTEGER     NOT NULL
-)
+);
