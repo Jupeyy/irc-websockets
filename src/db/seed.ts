@@ -60,8 +60,8 @@ const user = new User({
 })
 user.insert()
 
-const webhook = new Webhook({
-  name: 'ttxxxxxxt',
+const offtopicWebhook1 = new Webhook({
+  name: 'offtopic web hooker',
   token: 'xxx',
   server_id: ddnet.id!,
   channel_id: offtopic.id!,
@@ -69,4 +69,26 @@ const webhook = new Webhook({
   last_use_ip: '127.0.0.1',
   owner_id: user.id!
 })
-webhook.insert()
+offtopicWebhook1.insert()
+
+const offtopicWebhook2 = new Webhook({
+  name: 'offtopic weeb hook',
+  token: 'xxx',
+  server_id: ddnet.id!,
+  channel_id: offtopic.id!,
+  register_ip: '127.0.0.1',
+  last_use_ip: '127.0.0.1',
+  owner_id: user.id!
+})
+offtopicWebhook2.insert()
+
+const developerWebhook = new Webhook({
+  name: 'github news feed',
+  token: 'xxx',
+  server_id: ddnet.id!,
+  channel_id: developer.id!,
+  register_ip: '127.0.0.1',
+  last_use_ip: '127.0.0.1',
+  owner_id: user.id!
+})
+developerWebhook.insert()
