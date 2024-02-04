@@ -251,6 +251,7 @@ export const onDiscordGetChannelWebhooks = (channelId: string, req: Request, res
   res.send(channel.webhooks().map((webhook) => {
     const webhookObject: WebhookObject = {
       id: webhook.id!,
+      token: webhook.token,
       type: 0, // Incoming
       channel_id: channel.id!,
       name: webhook.name,
@@ -271,6 +272,7 @@ export const onWebhooksRequest = (wsState: WsState, serverId: number | bigint): 
   const webhooks: WebhookObject[] = server.webhooks().map((webhook) => {
     const webhookObject: WebhookObject = {
       id: webhook.id!,
+      token: webhook.token,
       type: 0, // Incoming
       channel_id: webhook.channelId,
       name: webhook.name,
