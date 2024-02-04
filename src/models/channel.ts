@@ -102,6 +102,8 @@ export class Channel {
     //       in data tags and query selectors
 
     // TODO: also validate the channel/server name combination to be unique
+    //       we already do it on a database level
+    //       but valid() should trigger before we run into a database crash
 
     this.errors = []
 
