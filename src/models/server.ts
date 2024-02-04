@@ -95,7 +95,7 @@ export class Server {
     this.id = result.lastInsertRowid
   }
 
-  static find (id: number): null | Server {
+  static find (id: number | bigint): null | Server {
     const row: undefined | IServerRow = getDb().
       prepare('SELECT * FROM servers WHERE ID = ?')
       .get(id) as undefined | IServerRow

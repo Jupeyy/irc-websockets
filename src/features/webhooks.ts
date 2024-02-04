@@ -11,6 +11,8 @@ import { sendIrc } from '../irc';
 import { isRatelimited } from './rate_limit';
 import { Webhook } from '../models/webhook';
 import { Channel } from '../models/channel';
+import { Server } from '../models/server';
+import { WsState } from '..';
 
 interface QueueMessage {
   ircMessage: IrcMessage
@@ -254,4 +256,25 @@ export const onDiscordGetChannelWebhooks = (channelId: string, req: Request, res
     }
     return webhookObject
   }))
+}
+
+export const onWebhooksRequest = (wsState: WsState, serverId: number | bigint) => {
+  console.log(`[ws] got webhooks request for serverId=${serverId}`)
+  const server = Server.find(serverId)
+  if (!server) {
+    wsState.socket.emit('webhooks', [])
+    return
+  }
+  const webhooks: WebhookObject[] = server.webhooks().map((webhook) => {
+    const webhookObject: WebhookObject = {
+      id: webhook.id!,
+      type: 0, // Incoming
+      channel_id: webhook.channelId,
+      name: webhook.name,
+      avatar: null,
+      application_id: null
+    }
+    return webhookObject
+  })
+  wsState.socket.emit('webhooks', webhooks)
 }

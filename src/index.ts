@@ -1,5 +1,5 @@
 import { Socket } from 'socket.io'
-import { ClientToServerEvents, ServerToClientEvents, IrcMessage, AuthRequest, JoinChannel, TypingInfo, RegisterRequest } from './socket.io'
+import { ClientToServerEvents, ServerToClientEvents, IrcMessage, AuthRequest, JoinChannel, TypingInfo, RegisterRequest, WebhookObject } from './socket.io'
 import { SessionUser, getUserBySocket, getUsers } from './session_users';
 import { getWebsocket } from './network/server';
 import { onAuthRequest, onRegisterRequest } from './features/accounts';
@@ -8,6 +8,7 @@ import { onTypingInfo } from './features/typing';
 import { onMessage } from './features/messages';
 import { onJoinChannel } from './features/channels';
 import './network/http_api'
+import { onWebhooksRequest } from './features/webhooks';
 
 require('dotenv').config()
 
@@ -105,6 +106,9 @@ getWebsocket().on('connection', (socket: Socket<ClientToServerEvents, ServerToCl
     })
     socket.on('authRequest', (auth: AuthRequest): void => {
       onAuthRequest(wsState, auth)
+    })
+    socket.on('webhooksRequest', (serverId: number | bigint): void => {
+      onWebhooksRequest(wsState, serverId)
     })
     socket.on('message', (message: IrcMessage): void => {
       onMessage(wsState, message)
