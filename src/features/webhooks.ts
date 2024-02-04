@@ -15,6 +15,7 @@ import { Server } from '../models/server';
 import { WsState } from '..';
 import { getUserBySocket } from '../session_users';
 import { User } from '../models/user';
+import { randomInt } from '../base/math';
 
 interface QueueMessage {
   ircMessage: IrcMessage
@@ -317,7 +318,7 @@ export const onNewWebhookRequest = (wsState: WsState, webhookObj: WebhookObject)
   }
   const webhook = new Webhook({
     name: webhookObj.name,
-    token: 'xxx',
+    token: randomInt(100000000000000, 3592180204621707).toString(), // you might be wondering .. and you are rightly so
     server_id: server.id!,
     channel_id: channel.id!,
     register_ip: wsState.ipAddr,
