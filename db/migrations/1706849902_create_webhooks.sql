@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS webhooks(
   name            TEXT        NOT NULL,
   token           TEXT        NOT NULL,
   channel_id      INTEGER     NOT NULL,
+  server_id       INTEGER     NOT NULL,
   register_ip     TEXT        NOT NULL,
   last_use_ip     TEXT        NOT NULL,
   created_at      TEXT        NOT NULL,
