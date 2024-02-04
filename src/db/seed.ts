@@ -1,6 +1,18 @@
 import { Webhook } from "../models/webhook";
 import { Channel } from "../models/channel";
 import { User } from "../models/user";
+import { Server } from "../models/server";
+
+const ddnet = new Server({
+  name: 'ddnet',
+  discord_name: 'ddnet',
+  irc_name: 'quakenet',
+  irc_ip: 'stockholm.se.quakenet.org',
+  icon_url: '',
+  register_ip: '127.0.0.1',
+  owner_id: 0
+})
+ddnet.insert()
 
 const developer = new Channel({
   name: 'developer',
@@ -10,6 +22,7 @@ const developer = new Channel({
   irc_channel: 'ddnet',
   irc_server_ip: 'stockholm.se.quakenet.org',
   irc_server_name: 'quakenet',
+  server_id: ddnet.id!,
   owner_id: 0
 })
 developer.insert()
@@ -22,6 +35,7 @@ const offtopic = new Channel({
   irc_channel: 'ddnet-off-topic',
   irc_server_ip: 'stockholm.se.quakenet.org',
   irc_server_name: 'quakenet',
+  server_id: ddnet.id!,
   owner_id: 0
 })
 offtopic.insert()
@@ -34,6 +48,7 @@ const channel = new Channel({
   irc_channel: 'ddnet-seed',
   irc_server_ip: 'stockholm.se.quakenet.org',
   irc_server_name: 'quakenet',
+  server_id: ddnet.id!,
   owner_id: 0
 })
 channel.insert()

@@ -1,6 +1,36 @@
 import { getDb } from "../base/db"
 import { Webhook } from "./webhook"
 
+type ChannelColumn = 'ID'
+  | 'name'
+  | 'description'
+  | 'discord_server'
+  | 'discord_channel'
+  | 'irc_channel'
+  | 'irc_server_ip'
+  | 'irc_server_name'
+  | 'server_id'
+  | 'created_at'
+  | 'updated_at'
+  | 'is_private'
+  | 'owner_id'
+
+export interface IChannelRow {
+  ID: number
+  name: string
+  description: string
+  discord_server: string
+  discord_channel: string
+  irc_channel: string
+  irc_server_ip: string
+  irc_server_name: string
+  server_id: number | bigint
+  created_at: string
+  updated_at: string
+  is_private: number
+  owner_id: number
+}
+
 export interface IChannelConstructor {
   ID?: number | bigint | null
   name: string
@@ -10,6 +40,7 @@ export interface IChannelConstructor {
   irc_channel: string
   irc_server_ip: string
   irc_server_name: string
+  server_id: number | bigint
   created_at?: string
   updated_at?: string
   is_private?: number
@@ -25,6 +56,7 @@ export class Channel {
   ircChannel: string
   ircServerIp: string
   ircServerName: string
+  serverId: number | bigint
   createdAt: string | null
   updatedAt: string | null
   isPrivate: number
@@ -46,6 +78,7 @@ export class Channel {
     this.ircChannel = columns.irc_channel
     this.ircServerIp = columns.irc_server_ip
     this.ircServerName = columns.irc_server_name
+    this.serverId = columns.server_id
     this.createdAt = columns.created_at || null
     this.updatedAt = columns.updated_at || null
     this.isPrivate = columns.is_private || 0
@@ -92,12 +125,14 @@ export class Channel {
       name, description,
       discord_server, discord_channel,
       irc_channel, irc_server_ip, irc_server_name,
+      server_id,
       created_at, updated_at,
       is_private, owner_id
     ) VALUES (
       ?, ?,
       ?, ?,
       ?, ?, ?,
+      ?,
       DateTime('now'), DateTime('now'),
       0, ?
     );
@@ -107,6 +142,7 @@ export class Channel {
       this.name, this.description,
       this.discordServer, this.discordChannel,
       this.ircChannel, this.ircServerIp, this.ircServerName,
+      this.serverId,
       this.ownerId
     )
     this.id = result.lastInsertRowid
@@ -163,25 +199,33 @@ export class Channel {
     return rows.map((row) => new Channel(row))
   }
 
+  /**
+   * where
+   *
+   * get Channel instance based on sql where statement
+   * given a custom value and column
+   *
+   * @param column VUNERABLE TO SQL INJECTIONS!!!! THIS SHOULD NEVER BE USER INPUT!
+   * @param value
+   * @returns list of Channel instances
+   */
+  static where (column: ChannelColumn, value: number | bigint | string): Channel[] {
+    if (!/^[a-z_]+$/.test(column)) {
+      throw new Error(`SQL injection prevention. column='${column}' value='${value}'`);
+    }
+    const rows: IChannelRow[] = getDb().
+      prepare(`SELECT * FROM channels WHERE ${column} = ?`)
+      .all(value) as IChannelRow[]
+    if(!rows) {
+      return []
+    }
+    return rows.map((row) => new Channel(row))
+  }
+
   webhooks (): Webhook[] {
     if(!this.id) {
       return []
     }
     return Webhook.where('channel_id', this.id)
   }
-}
-
-export interface IChannelRow {
-  ID: number,
-  name: string,
-  description: string,
-  discord_server: string,
-  discord_channel: string,
-  irc_channel: string,
-  irc_server_ip: string,
-  irc_server_name: string,
-  created_at: string,
-  updated_at: string,
-  is_private: number,
-  owner_id: number
 }

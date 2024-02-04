@@ -2,6 +2,7 @@ import repl from 'repl'
 import path from 'path'
 import { readdirSync } from 'fs'
 import * as db from '../src/base/db'
+import { checkPendingMigrations } from '../src/base/db'
 
 console.log(`
  _
@@ -24,6 +25,8 @@ console.log("[irc-websockets] You have access to all the models. You can use the
 console.log("[irc-websockets]")
 console.log("[irc-websockets]   Channel.find(1).webhooks()")
 console.log("[irc-websockets]")
+
+checkPendingMigrations()
 
 const replServer = repl.start({
   prompt: '> '

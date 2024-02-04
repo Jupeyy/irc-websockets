@@ -14,6 +14,18 @@ type WebhookColumn = 'ID'
   | 'updated_at'
   | 'owner_id'
 
+export interface IWebhookRow {
+  ID: number,
+  name: string,
+  token: string,
+  channel_id: number | bigint
+  register_ip: string,
+  last_use_ip: string,
+  created_at: string,
+  updated_at: string,
+  owner_id: number | bigint
+}
+
 export interface IWebhookConstructor {
   ID?: number | bigint | null
   name: string
@@ -97,7 +109,7 @@ export class Webhook {
    *
    * @param column VUNERABLE TO SQL INJECTIONS!!!! THIS SHOULD NEVER BE USER INPUT!
    * @param value
-   * @returns Webhook
+   * @returns list of Webhook instances
    */
   static where (column: WebhookColumn, value: number | bigint | string): Webhook[] {
     // TODO: replace the string params with one big object
@@ -162,16 +174,4 @@ export class Webhook {
   channel (): Channel {
     return Channel.find(this.channelId) as Channel
   }
-}
-
-export interface IWebhookRow {
-  ID: number,
-  name: string,
-  token: string,
-  channel_id: number | bigint
-  register_ip: string,
-  last_use_ip: string,
-  created_at: string,
-  updated_at: string,
-  owner_id: number | bigint
 }
