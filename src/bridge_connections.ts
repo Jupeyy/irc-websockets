@@ -10,6 +10,7 @@ export const getConnectedIrcChannels = (): ChannelMapping[] => {
   return Channel.all().map((channel) => {
     const mapping: ChannelMapping = {
       id: channel.id!,
+      serverId: channel.serverId,
       description: channel.description,
       irc: {
         serverIp: channel.ircServerIp,
@@ -31,6 +32,7 @@ if (getConnectedIrcChannels().filter((entry) => entry.irc.channel === process.en
   getConnectedIrcChannels().push(
     {
       id: 0,
+      serverId: 0,
       description: '',
       irc: {
         serverIp: 'stockholm.se.quakenet.org',

@@ -12,6 +12,7 @@ import { Channel } from "../models/channel"
 //       new cleaner `Channel` model
 export interface ChannelMapping {
   id: number | bigint,
+  serverId: number | bigint
   description: string,
   irc: {
     serverIp: string,
@@ -43,6 +44,7 @@ export const getDiscordChannels = (discordServerName: string): ChannelInfo[] => 
   return serverEntries.map((entry) => {
     return {
       id: entry.id,
+      serverId: entry.serverId,
       name: entry.discord.channel,
       description: entry.description
     }
@@ -66,7 +68,8 @@ export const onJoinChannel = (wsState: WsState, join: JoinChannel) => {
       success: false,
       server: join.server,
       channel: join.channel,
-      channelId: 0
+      channelId: 0,
+      serverId: 0
     })
     return
   }
@@ -76,7 +79,8 @@ export const onJoinChannel = (wsState: WsState, join: JoinChannel) => {
       success: false,
       server: join.server,
       channel: join.channel,
-      channelId: channel.id
+      channelId: channel.id,
+      serverId: channel.serverId
     })
   } else {
     wsState.socket.emit('joinChannelResponse', {
@@ -84,7 +88,8 @@ export const onJoinChannel = (wsState: WsState, join: JoinChannel) => {
       success: true,
       server: join.server,
       channel: join.channel,
-      channelId: channel.id
+      channelId: channel.id,
+      serverId: channel.serverId
     })
   }
 }
