@@ -7,6 +7,7 @@ import { Channel } from "./channel"
 type WebhookColumn = 'ID'
   | 'name'
   | 'token'
+  | 'server_id'
   | 'channel_id'
   | 'register_ip'
   | 'last_use_ip'
@@ -18,6 +19,7 @@ export interface IWebhookRow {
   ID: number,
   name: string,
   token: string,
+  server_id: number | bigint
   channel_id: number | bigint
   register_ip: string,
   last_use_ip: string,
@@ -30,6 +32,7 @@ export interface IWebhookConstructor {
   ID?: number | bigint | null
   name: string
   token: string
+  server_id: number | bigint
   channel_id: number | bigint
   register_ip: string
   last_use_ip: string
@@ -42,6 +45,7 @@ export class Webhook {
   id: number | bigint | null
   name: string
   token: string
+  serverId: number | bigint
   channelId: number | bigint
   registerIp: string
   lastUseIp: string
@@ -53,6 +57,7 @@ export class Webhook {
     this.id = row.ID || null
     this.name = row.name
     this.token = row.token
+    this.serverId = row.server_id
     this.channelId = row.channel_id
     this.registerIp = row.register_ip
     this.lastUseIp = row.last_use_ip
@@ -149,13 +154,13 @@ export class Webhook {
     const insertQuery = `
     INSERT INTO webhooks(
       name, token,
-      channel_id,
+      server_id, channel_id,
       register_ip, last_use_ip,
       created_at, updated_at,
       owner_id
     ) VALUES (
       ?, ?,
-      ?,
+      ?, ?,
       ?, ?,
       DateTime('now'), DateTime('now'),
       ?
@@ -164,7 +169,7 @@ export class Webhook {
     const stmt = getDb().prepare(insertQuery)
     const result = stmt.run(
       this.name, this.token,
-      this.channelId,
+      this.serverId, this.channelId,
       this.registerIp, this.lastUseIp,
       this.ownerId
     )

@@ -63,6 +63,7 @@ user.insert()
 const webhook = new Webhook({
   name: 'ttxxxxxxt',
   token: 'xxx',
+  server_id: ddnet.id!,
   channel_id: offtopic.id!,
   register_ip: '127.0.0.1',
   last_use_ip: '127.0.0.1',
