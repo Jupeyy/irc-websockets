@@ -13,6 +13,8 @@ import { Webhook } from '../models/webhook';
 import { Channel } from '../models/channel';
 import { Server } from '../models/server';
 import { WsState } from '..';
+import { getUserBySocket } from '../session_users';
+import { User } from '../models/user';
 
 interface QueueMessage {
   ircMessage: IrcMessage
@@ -258,7 +260,7 @@ export const onDiscordGetChannelWebhooks = (channelId: string, req: Request, res
   }))
 }
 
-export const onWebhooksRequest = (wsState: WsState, serverId: number | bigint) => {
+export const onWebhooksRequest = (wsState: WsState, serverId: number | bigint): void => {
   console.log(`[ws] got webhooks request for serverId=${serverId}`)
   const server = Server.find(serverId)
   if (!server) {
@@ -277,4 +279,47 @@ export const onWebhooksRequest = (wsState: WsState, serverId: number | bigint) =
     return webhookObject
   })
   wsState.socket.emit('webhooks', webhooks)
+}
+
+export const onNewWebhookRequest = (wsState: WsState, webhookObj: WebhookObject): void => {
+  const channel = Channel.find(webhookObj.channel_id)
+  if(!channel) {
+    console.log(`[!] failed to create webhook. Channel with id=${webhookObj.channel_id} not found`)
+    return
+  }
+  const server = channel.server()
+  if(!server) {
+    console.log(`[!] failed to create webhook. Server with id=${channel.serverId} not found`)
+    return
+  }
+  const sessionUser = getUserBySocket(wsState.socket)
+  if (!sessionUser) {
+    console.log(`[!] failed to create webhook. Session user not found! That is sus. Are we being hacked?`)
+    return
+  }
+  if(!sessionUser.dbUser) {
+    console.log(`[!] failed to create webhook. User is not logged in! That is sus. Are we being hacked?`)
+    return
+  }
+  const dbUser = sessionUser.dbUser
+  const user = User.find(dbUser.ID)
+  if(!user) {
+    console.log(`[!] failed to create webhook. User not found in database!`)
+    return
+  }
+  if(user.blocked()) {
+    console.log(`[!] failed to create webhook. User is blocked!`)
+    return
+  }
+  const webhook = new Webhook({
+    name: webhookObj.name,
+    token: 'xxx',
+    server_id: server.id!,
+    channel_id: channel.id!,
+    register_ip: wsState.ipAddr,
+    last_use_ip: wsState.ipAddr,
+    owner_id: user.id!
+  })
+  webhook.insert()
+  console.log(`[*] created new webhook! server='${server.name}' channel='${channel.name}' name='${webhook.name}'`)
 }

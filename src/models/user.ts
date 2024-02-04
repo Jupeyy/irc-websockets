@@ -75,7 +75,7 @@ export class User {
     this.id = result.lastInsertRowid
   }
 
-  static find (id: number): null | User {
+  static find (id: number | bigint): null | User {
     const row: undefined | IUserRow = getDb().
       prepare('SELECT * FROM users WHERE ID = ?')
       .get(id) as undefined | IUserRow

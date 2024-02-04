@@ -1,4 +1,5 @@
 import { getDb } from "../base/db"
+import { IServerRow, Server } from "./server"
 import { Webhook } from "./webhook"
 
 type ChannelColumn = 'ID'
@@ -222,6 +223,16 @@ export class Channel {
       return []
     }
     return rows.map((row) => new Channel(row))
+  }
+
+  server (): null | Server {
+    const row: undefined | IServerRow = getDb().
+      prepare('SELECT * FROM servers WHERE ID = ?')
+      .get(this.serverId) as undefined | IServerRow
+    if(!row) {
+      return null
+    }
+    return new Server(row)
   }
 
   webhooks (): Webhook[] {

@@ -8,7 +8,7 @@ import { onTypingInfo } from './features/typing';
 import { onMessage } from './features/messages';
 import { onJoinChannel } from './features/channels';
 import './network/http_api'
-import { onWebhooksRequest } from './features/webhooks';
+import { onNewWebhookRequest, onWebhooksRequest } from './features/webhooks';
 
 require('dotenv').config()
 
@@ -109,6 +109,9 @@ getWebsocket().on('connection', (socket: Socket<ClientToServerEvents, ServerToCl
     })
     socket.on('webhooksRequest', (serverId: number | bigint): void => {
       onWebhooksRequest(wsState, serverId)
+    })
+    socket.on('newWebhookRequest', (webhook: WebhookObject): void => {
+      onNewWebhookRequest(wsState, webhook)
     })
     socket.on('message', (message: IrcMessage): void => {
       onMessage(wsState, message)
