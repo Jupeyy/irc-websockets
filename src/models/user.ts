@@ -49,6 +49,14 @@ export class User {
     return this.isBlocked === 1
   }
 
+  admin(): boolean {
+    return this.isAdmin === 1
+  }
+
+  save (): void {
+    this.id ? this.update() : this.insert()
+  }
+
   insert (): void {
     const insertQuery = `
     INSERT INTO users(
@@ -73,6 +81,24 @@ export class User {
       this.isBlocked
     )
     this.id = result.lastInsertRowid
+  }
+
+  update (): void {
+    const insertQuery = `
+    UPDATE users SET
+      username = ?, password = ?,
+      is_admin = ?, is_blocked = ?,
+      updated_at = DateTime('now')
+    WHERE ID = ?;
+    `
+    const stmt = getDb().prepare(insertQuery)
+    stmt.run(
+      this.username,
+      this.password,
+      this.isAdmin,
+      this.isBlocked,
+      this.id
+    )
   }
 
   static find (id: number | bigint): null | User {
@@ -103,6 +129,17 @@ export class User {
       return null
     }
     return new User(row)
+  }
+
+
+  static all (): User[] {
+    const rows: undefined | IUserRow[] = getDb().
+      prepare('SELECT * FROM users')
+      .all() as undefined | IUserRow[]
+    if(!rows) {
+      return []
+    }
+    return rows.map((row) => new User(row))
   }
 
   static findByCredentials (username: string, password: string): null | User {

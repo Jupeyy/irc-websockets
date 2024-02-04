@@ -41,6 +41,7 @@ const authError = (wsState: WsState, msg: string): void => {
     'authResponse',
     {
       username: '',
+      admin: false,
       token: '',
       success: false,
       message: msg
@@ -99,6 +100,7 @@ export const onRegisterRequest = (wsState: WsState, register: RegisterRequest) =
     'authResponse',
     {
       username: register.username,
+      admin: false,
       token: '',
       success: true,
       message: 'Successfully registered! You can now log in!'
@@ -139,10 +141,13 @@ export const onAuthRequest = (wsState: WsState, auth: AuthRequest) => {
   }
   console.log(`[*] '${user.username}' logged in ${user.dbUser ? 'to account' : 'with master password'}`)
   getWebsocket().emit('userJoin', user.username)
+  console.log(dbUser)
+  console.log(dbUser && dbUser.is_admin === 1 || false)
   wsState.socket.emit(
     'authResponse',
     {
       username: user.username,
+      admin: dbUser && dbUser.is_admin === 1 || false,
       token: user.sessionToken,
       success: true,
       message: 'logged in'

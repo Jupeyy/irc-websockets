@@ -311,6 +311,10 @@ export const onNewWebhookRequest = (wsState: WsState, webhookObj: WebhookObject)
     console.log(`[!] failed to create webhook. User is blocked!`)
     return
   }
+  if(!user.admin()) {
+    console.log(`[!] failed to create webhook. User is missing permissions!`)
+    return
+  }
   const webhook = new Webhook({
     name: webhookObj.name,
     token: 'xxx',
