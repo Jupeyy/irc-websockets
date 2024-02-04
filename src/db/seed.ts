@@ -3,6 +3,34 @@ import { Channel } from "../models/channel";
 import { User } from "../models/user";
 import { Server } from "../models/server";
 
+/*
+  To run this file do: npm run seed
+
+  It is not recommended to run this file in production
+  This is just to populate your development database with some entries
+
+  If you get some unique constraint errors when running it multiple times
+  you can run this command to delete all the conflicting data.
+
+      delete from servers;delete from channels;delete from webhooks;delete from users where username LIKE "%seed";
+
+  DO NOT RUN THIS IN PRODUCTION! IT DELETES YOUR DATA
+*/
+
+const user = new User({
+  username: 'seed',
+  password: '123',
+  register_ip: '127.0.0.1'
+})
+user.insert()
+
+const qshar = new User({
+  username: 'QshaR_seed',
+  password: 'vodka',
+  register_ip: '127.0.0.1'
+})
+qshar.insert()
+
 const ddnet = new Server({
   name: 'ddnet',
   discord_name: 'ddnet',
@@ -13,6 +41,41 @@ const ddnet = new Server({
   owner_id: 0
 })
 ddnet.insert()
+
+const kog = new Server({
+  name: 'kog',
+  discord_name: 'kog',
+  irc_name: 'quakenet',
+  irc_ip: 'stockholm.se.quakenet.org',
+  icon_url: '',
+  register_ip: '127.0.0.1',
+  owner_id: qshar.id!
+})
+kog.insert()
+
+const kogGeneral = new Channel({
+  name: 'general',
+  description: 'test description',
+  discord_server: 'kog',
+  discord_channel: 'general',
+  irc_channel: 'kog',
+  irc_server_ip: 'stockholm.se.quakenet.org',
+  irc_server_name: 'quakenet',
+  server_id: kog.id!,
+  owner_id: qshar.id!
+})
+kogGeneral.insert()
+
+const kogGeneralWebhook = new Webhook({
+  name: 'kogi when add bridge omg',
+  token: 'xxx',
+  server_id: kog.id!,
+  channel_id: kogGeneral.id!,
+  register_ip: '127.0.0.1',
+  last_use_ip: '127.0.0.1',
+  owner_id: user.id!
+})
+kogGeneralWebhook.insert()
 
 const developer = new Channel({
   name: 'developer',
@@ -52,13 +115,6 @@ const channel = new Channel({
   owner_id: 0
 })
 channel.insert()
-
-const user = new User({
-  username: 'seed',
-  password: '123',
-  register_ip: '127.0.0.1'
-})
-user.insert()
 
 const offtopicWebhook1 = new Webhook({
   name: 'offtopic web hooker',

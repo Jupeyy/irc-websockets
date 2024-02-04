@@ -1,5 +1,6 @@
 import { getDb } from "../base/db"
 import { Channel } from "./channel"
+import { Webhook } from "./webhook"
 
 type ServerColumn = 'ID'
   | 'name'
@@ -139,5 +140,12 @@ export class Server {
       return []
     }
     return Channel.where('server_id', this.id)
+  }
+
+  webhooks (): Webhook[] {
+    if(!this.id) {
+      return []
+    }
+    return Webhook.where('server_id', this.id)
   }
 }

@@ -44,7 +44,7 @@ export interface IChannelConstructor {
   created_at?: string
   updated_at?: string
   is_private?: number
-  owner_id: number
+  owner_id: number | bigint
 }
 
 export class Channel {
@@ -60,7 +60,7 @@ export class Channel {
   createdAt: string | null
   updatedAt: string | null
   isPrivate: number
-  ownerId: number
+  ownerId: number | bigint
   /**
    * errors
    *
