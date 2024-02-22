@@ -69,6 +69,19 @@ const teeworlds = new Server({
 })
 teeworlds.insert()
 
+const teeworldsGeneral = new Channel({
+  name: 'general',
+  description: 'test description',
+  discord_server: 'teeworlds',
+  discord_channel: 'general',
+  irc_channel: 'teeworlds-general',
+  irc_server_ip: 'stockholm.se.quakenet.org',
+  irc_server_name: 'quakenet',
+  server_id: teeworlds.id!,
+  owner_id: heinrich.id!
+})
+teeworldsGeneral.insert()
+
 const kog = new Server({
   name: 'kog',
   discord_name: 'kog',
@@ -92,6 +105,19 @@ const kogGeneral = new Channel({
   owner_id: qshar.id!
 })
 kogGeneral.insert()
+
+const kogMemes = new Channel({
+  name: 'memes',
+  description: 'test description',
+  discord_server: 'kog',
+  discord_channel: 'memes',
+  irc_channel: 'kog',
+  irc_server_ip: 'stockholm.se.quakenet.org',
+  irc_server_name: 'quakenet',
+  server_id: kog.id!,
+  owner_id: qshar.id!
+})
+kogMemes.insert()
 
 const kogGeneralWebhook = new Webhook({
   name: 'kogi when add bridge omg',
