@@ -60,7 +60,7 @@ ddnet.insert()
 
 const teeworlds = new Server({
   name: 'teeworlds',
-  discord_name: 'Teeworlds discord',
+  discord_name: 'teeworlds',
   irc_name: 'quakenet',
   irc_ip: 'stockholm.se.quakenet.org',
   icon_url: '../img/teeworlds-logo.png',
