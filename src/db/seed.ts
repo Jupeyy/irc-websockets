@@ -82,6 +82,19 @@ const teeworldsGeneral = new Channel({
 })
 teeworldsGeneral.insert()
 
+const teeworldsBridge = new Channel({
+  name: 'bridge',
+  description: 'bridged to discord.gg/teeworlds #bridge',
+  discord_server: 'teeworlds',
+  discord_channel: 'bridge',
+  irc_channel: 'teeworlds',
+  irc_server_ip: 'stockholm.se.quakenet.org',
+  irc_server_name: 'quakenet',
+  server_id: teeworlds.id!,
+  owner_id: heinrich.id!
+})
+teeworldsBridge.insert()
+
 const kog = new Server({
   name: 'kog',
   discord_name: 'kog',
