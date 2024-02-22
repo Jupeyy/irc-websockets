@@ -41,6 +41,7 @@ export const onConnectedServerListRequest = (wsState: WsState) => {
       }
     })
     servers.push({
+      id: server.id || 0,
       name: server.name,
       iconUrl: server.iconUrl,
       bannerUrl: server.bannerUrl || '',
