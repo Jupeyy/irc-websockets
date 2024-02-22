@@ -69,6 +69,10 @@ export class Server {
     this.updatedAt = row.updated_at || null
   }
 
+  save (): void {
+    this.id ? this.update() : this.insert()
+  }
+
   insert (): void {
     const insertQuery = `
     INSERT INTO servers(
@@ -93,6 +97,26 @@ export class Server {
       this.registerIp, this.ownerId,
     )
     this.id = result.lastInsertRowid
+  }
+
+  update (): void {
+    const updateQuery = `
+    UPDATE servers SET
+      name = ?, discord_name = ?,
+      irc_name = ?, irc_ip = ?,
+      icon_url = ?, banner_url = ?,
+      owner_id = ?,
+      updated_at = DateTime('now')
+    WHERE ID = ?;
+    `
+    const stmt = getDb().prepare(updateQuery)
+    stmt.run(
+      this.name, this.discordName,
+      this.ircName, this.ircIp,
+      this.iconUrl, this.bannerUrl,
+      this.ownerId,
+      this.id
+    )
   }
 
   static find (id: number | bigint): null | Server {

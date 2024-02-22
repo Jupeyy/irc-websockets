@@ -3,6 +3,8 @@ import { Channel } from "../models/channel";
 import { User } from "../models/user";
 import { Server } from "../models/server";
 
+require('dotenv').config()
+
 /*
   To run this file do: npm run seed
 
@@ -12,10 +14,17 @@ import { Server } from "../models/server";
   If you get some unique constraint errors when running it multiple times
   you can run this command to delete all the conflicting data.
 
-      delete from servers;delete from channels;delete from webhooks;delete from users where username LIKE "%seed";
+      delete from servers;delete from channels;delete from webhooks;delete from users where username LIKE "%seed" or username = 'ChillerDragon';
 
   DO NOT RUN THIS IN PRODUCTION! IT DELETES YOUR DATA
 */
+
+const chiller = new User({
+  username: 'ChillerDragon',
+  password: process.env.SEED_PASSWORD || 'xxx',
+  register_ip: '127.0.0.1'
+})
+chiller.insert()
 
 const user = new User({
   username: 'seed',
@@ -31,23 +40,41 @@ const qshar = new User({
 })
 qshar.insert()
 
+const heinrich = new User({
+  username: 'heinrich5991_seed',
+  password: 'aiYi3va#bahreXa3TheaSh)eepolach7',
+  register_ip: '127.0.0.1'
+})
+heinrich.insert()
+
 const ddnet = new Server({
   name: 'ddnet',
   discord_name: 'ddnet',
   irc_name: 'quakenet',
   irc_ip: 'stockholm.se.quakenet.org',
-  icon_url: '',
+  icon_url: '../img/ddnet-logo.png',
   register_ip: '127.0.0.1',
   owner_id: 0
 })
 ddnet.insert()
+
+const teeworlds = new Server({
+  name: 'teeworlds',
+  discord_name: 'Teeworlds discord',
+  irc_name: 'quakenet',
+  irc_ip: 'stockholm.se.quakenet.org',
+  icon_url: '../img/teeworlds-logo.png',
+  register_ip: '127.0.0.1',
+  owner_id: heinrich.id!
+})
+teeworlds.insert()
 
 const kog = new Server({
   name: 'kog',
   discord_name: 'kog',
   irc_name: 'quakenet',
   irc_ip: 'stockholm.se.quakenet.org',
-  icon_url: '',
+  icon_url: 'https://kog.tw/other/logo_black_short.svg',
   register_ip: '127.0.0.1',
   owner_id: qshar.id!
 })
