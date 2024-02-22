@@ -63,6 +63,7 @@ export const onJoinChannel = (wsState: WsState, join: JoinChannel) => {
   //       and we also want to use the database as cleanly as possibly
   const channel = Channel.findByDiscordNames(join.server, join.channel)
   if (!channel || !channel.id) {
+    console.warn(`${wsState.ipAddr} tried to join server='${join.server}' channel='${join.channel}' but that is not in the db`)
     wsState.socket.emit('joinChannelResponse', {
       message: 'channel is not in database',
       success: false,

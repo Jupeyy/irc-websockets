@@ -144,7 +144,7 @@ const developer = new Channel({
 developer.insert()
 
 const offtopic = new Channel({
-  name: 'offtopic',
+  name: 'off-topic',
   description: 'test description',
   discord_server: 'ddnet',
   discord_channel: 'off-topic',
@@ -157,7 +157,7 @@ const offtopic = new Channel({
 offtopic.insert()
 
 const channel = new Channel({
-  name: 'seed-channel',
+  name: 'seed',
   description: 'test description',
   discord_server: 'ddnet',
   discord_channel: 'seed',
