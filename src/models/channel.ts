@@ -118,6 +118,10 @@ export class Channel {
     return this.errors.length === 0
   }
 
+  save (): void {
+    this.id ? this.update() : this.insert()
+  }
+
   insert (): Channel | boolean {
     if (!this.valid()) {
       throw Error(this.errors.join(','))
@@ -150,6 +154,28 @@ export class Channel {
     )
     this.id = result.lastInsertRowid
     return true
+  }
+
+  update (): void {
+    const updateQuery = `
+    UPDATE channels SET
+      name = ?, description = ?,
+      discord_server = ?, discord_channel = ?,
+      irc_channel = ?, irc_server_ip = ?, irc_server_name = ?,
+      server_id = ?,
+      updated_at = DateTime('now'),
+      is_private = ?, owner_id = ?
+    WHERE ID = ?;
+    `
+    const stmt = getDb().prepare(updateQuery)
+    stmt.run(
+      this.name, this.description,
+      this.discordServer, this.discordChannel,
+      this.ircChannel, this.ircServerIp, this.ircServerName,
+      this.serverId,
+      this.isPrivate, this.ownerId,
+      this.id
+    )
   }
 
   static find (channelId: number | bigint | string): null | Channel {
