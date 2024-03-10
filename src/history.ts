@@ -69,8 +69,30 @@ export const logMessage = (discordServer: string, discordChannel: string, msg: I
 }
 
 export interface MessageLogOptions {
-  fromId: number,
+  // list messages starting with this id
+  fromId: number
+
+  // if count is set to 0
+  // it returns all messages
   count: number
+
+  // filter log output with raw string match (conflicts with `searchPattern`)
+  // it will not filter if an empty string is given
+  searchStr: string
+
+  // filter log output with regex pattern (conflicts with `searchStr`)
+  // it will not filter if an empty string is given
+  searchPattern: string
+}
+
+const filterMessages = (messages: IrcMessage[], options: MessageLogOptions): IrcMessage[] => {
+  if (options.searchStr) {
+    return messages.filter((message) => message.message.includes(options.searchStr) || message.from.includes(options.searchStr))
+  }
+  if (options.searchPattern) {
+    return messages.filter((message) => new RegExp(options.searchPattern).test(message.message) || new RegExp(options.searchPattern).test(message.from))
+  }
+  return messages
 }
 
 export const getMessages = (
@@ -78,7 +100,9 @@ export const getMessages = (
   discordChannel: string,
   options: MessageLogOptions = {
     fromId: 0,
-    count: 10
+    count: 10,
+    searchStr: '',
+    searchPattern: '',
   }
 ): IrcMessage[] => {
   const channelIdentifier = `${discordServer}#${discordChannel}`
@@ -89,18 +113,22 @@ export const getMessages = (
   // return messages.filter((msg) => msg.id >= options.fromId).slice(-options.count)
   const filtered: IrcMessage[] = []
   if (options.fromId === 0) {
-    return messages.slice(-options.count)
+    if (options.count === 0) {
+      return filterMessages(messages, options)
+    } else {
+      return filterMessages(messages, options).slice(-options.count)
+    }
   }
   messages.forEach((msg) => {
     if (msg.id < options.fromId) {
       return
     }
-    if (filtered.length >= options.count) {
+    if (options.count !== 0 && filtered.length >= options.count) {
       return
     }
     filtered.push(msg)
   })
-  return filtered
+  return filterMessages(filtered, options)
 }
 
 process.on('SIGINT', () => {

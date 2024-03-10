@@ -30,13 +30,17 @@ getExpress().use((req, res, next) => {
 })
 getExpress().use(cors())
 type QueryParams = {
-  from: string,
+  from: string
   count: string
+  search: string
+  pattern: string
 }
 getExpress().get('/:server/:channel/messages', (req: Request<ParamsDictionary, {}, {}, QueryParams>, res) => {
   const options: MessageLogOptions = {
     fromId: parseInt(req.query.from, 10) || 0,
-    count: parseInt(req.query.count, 10) || 10
+    count: parseInt(req.query.count, 10) || 10,
+    searchStr: req.query.search || '',
+    searchPattern: req.query.pattern || ''
   }
   const messages: IrcMessage[] = getMessages(req.params.server, req.params.channel, options)
   res.end(JSON.stringify(messages))
