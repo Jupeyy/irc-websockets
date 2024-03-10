@@ -11,7 +11,7 @@ if (!process.env.IRC_SERVER) {
 }
 
 class MockIrcClient {
-  constructor(server: string, nick: string, opts?: any)
+  constructor(_server: string, _nick: string, _opts?: any)
   {
   }
 
@@ -26,7 +26,7 @@ class MockIrcClient {
         if (Math.random() > 0.1) {
           return
         }
-        _listener('mock_user', 'fake mock message')
+        _listener('mock_user', `fake mock message (sent at ${new Date().toString().split(' ')[4]})`)
       }, 50000)
     }
     return this
