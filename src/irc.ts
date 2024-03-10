@@ -21,7 +21,7 @@ class MockIrcClient {
     if (eventName !== 'error') {
       // send a message in every channel instanly once for testing
       // and then keep them coming slowly and randomly
-      setTimeout(() => { _listener('mock_user', 'fake mock message') }, 100)
+      setTimeout(() => { _listener('mock_user', 'fake mock message (backend started ...)') }, 100)
       setInterval(() => {
         if (Math.random() > 0.1) {
           return
