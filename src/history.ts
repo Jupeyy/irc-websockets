@@ -30,12 +30,19 @@ const validateMessages = (messages: IrcMessage[]): void => {
     }
   }
 
-  const requiredKeys = Object.keys(new UglyTsHackToGetKeysAndCompileCheck())
+  const hackKeys = new UglyTsHackToGetKeysAndCompileCheck()
+  const requiredKeys = Object.keys(hackKeys)
   for(const message of messages) {
     for(const requiredKey of requiredKeys) {
       if (!(requiredKey in message)) {
         console.log(message)
         throw new Error(`Invalid message! Missing property '${requiredKey}'`)
+      }
+      const expectedType = typeof(hackKeys[requiredKey as keyof UglyTsHackToGetKeysAndCompileCheck])
+      const gotType = typeof(message[requiredKey as keyof IrcMessage])
+      if (expectedType !== gotType) {
+        console.log(message)
+        throw new Error(`Invalid message! Message has wrong type for key '${requiredKey}' expected=${expectedType} got=${gotType}`)
       }
     }
   }
