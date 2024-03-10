@@ -7,13 +7,51 @@ if (!process.env.BACKLOG_SIZE) {
   process.exit(1)
 }
 
+/**
+ * throws on invalid messages
+ */
+const validateMessages = (messages: IrcMessage[]): void => {
+  class UglyTsHackToGetKeysAndCompileCheck implements IrcMessage {
+    id: number
+    from: string
+    message: string
+    channel: string
+    server: string
+    date: string
+    token?: string
+    constructor() {
+      this.id = 0
+      this.from = ''
+      this.message = ''
+      this.channel = ''
+      this.server = ''
+      this.date = ''
+      this.token = ''
+    }
+  }
+
+  const requiredKeys = Object.keys(new UglyTsHackToGetKeysAndCompileCheck())
+  for(const message of messages) {
+    for(const requiredKey of requiredKeys) {
+      if (!(requiredKey in message)) {
+        console.log(message)
+        throw new Error(`Invalid message! Missing property '${requiredKey}'`)
+      }
+    }
+  }
+}
+
 const loadMessageHistory = (): Record<string, IrcMessage[]> => {
   if (!fs.existsSync('message_log.json')) {
     return {}
   }
   console.log('[*] loading message_log.json ...')
   const logRaw = fs.readFileSync('message_log.json', 'utf-8')
-  return JSON.parse(logRaw)
+  const messagesAllServers: Record<string, IrcMessage[]> = JSON.parse(logRaw)
+  for(const messages of Object.values(messagesAllServers)) {
+    validateMessages(messages)
+  }
+  return messagesAllServers
 }
 
 // log of last BACKLOG_SIZE messages
