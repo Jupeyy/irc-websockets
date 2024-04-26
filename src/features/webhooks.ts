@@ -82,12 +82,14 @@ export const onDiscordWebhookExecute = (webhookId: string, webhookToken: string,
 
   const webhook = Webhook.findByCredentials(webhookId, webhookToken)
   if(!webhook) {
+    console.log(`[!] webhook invalid credentials`)
     res.send({ message: 'TODO: this is not discord api yet. BUT ERROR 404' })
     return
   }
 
   const channel = webhook.channel()
   if(!channel) {
+    console.log(`[!] webhook failed to find channel`)
     res.send({ message: 'TODO: this is not discord api yet. BUT ERROR your webhook is not attached to any channel' })
     return
   }
@@ -101,6 +103,7 @@ export const onDiscordWebhookExecute = (webhookId: string, webhookToken: string,
   // https://discord.com/developers/docs/resources/webhook#execute-webhook
   const messageContent = req.body.content
   if(!messageContent) {
+    console.log(`[!] webhook had no content`)
     res.send({ message: 'TODO: this is not discord api yet. BUT ERROR msg empty' })
     return
   }
@@ -148,11 +151,13 @@ export const onDiscordWebhookExecute = (webhookId: string, webhookToken: string,
   }
 
   if (!sendIrc(mapping.irc.serverName, mapping.irc.channel, message.message)) {
+    console.log(`[!] webhook failed to send to irc`)
     res.send({ message: 'TODO: this is not discord api yet. ERROR FAILED TO irc' })
     return
   }
   addMessage(mapping, message)
 
+  console.log(`[*] webhook OK`)
   res.send({ message: 'TODO: this is not discord api yet. But OK' })
 }
 
