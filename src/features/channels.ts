@@ -122,10 +122,14 @@ export const joinChannel = (socket: Socket, discordChannel: string, discordServe
   let member: ChannelMember | null = ChannelMember.findByUserAndChannel(user.dbUser.ID, channel.id!)
   if (!member) {
     console.log(`[!][join-channel] user='${user.username}' is not member of '${discordServer}#${discordChannel}'`)
-    if(channel.isPrivate) {
-      console.log(`[!][join-channel] user='${user.username}' failed to join private channel '${discordServer}#${discordChannel}'`)
-      return false
-    }
+
+    // TODO: as of right now everyone can write in #developer once that has to be locked down
+    //       there has to be a good way to actually let people in
+
+    // if(channel.isPrivate) {
+    //   console.log(`[!][join-channel] user='${user.username}' failed to join private channel '${discordServer}#${discordChannel}'`)
+    //   return false
+    // }
     member = new ChannelMember({
       channel_id: channel.id!,
       user_id: user.dbUser.ID,
