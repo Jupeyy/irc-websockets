@@ -7,5 +7,7 @@ CREATE TABLE IF NOT EXISTS users(
   created_at  TEXT        NOT NULL,
   updated_at  TEXT        NOT NULL,
   is_admin    INTEGER     NOT NULL DEFAULT 0,
-  is_blocked  INTEGER     NOT NULL DEFAULT 0
+  is_blocked  INTEGER     NOT NULL DEFAULT 0,
+  token       TEXT -- full account access used by front end for http requests
 );
+
