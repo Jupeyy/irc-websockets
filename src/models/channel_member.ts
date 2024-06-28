@@ -17,9 +17,9 @@ export interface IChannelMemberRow {
   ID: number | bigint
   channel_id: number | bigint
   user_id: number | bigint
-  lowest_requested_msg_id: number | null
-  highest_requested_msg_id: number | null
-  unred_msg_id: number | null
+  lowest_requested_msg_id: number | bigint | null
+  highest_requested_msg_id: number | bigint | null
+  unred_msg_id: number | bigint | null
   has_write_access: number
   created_at: string
   updated_at: string
@@ -29,9 +29,9 @@ export interface IChannelMemberConstructor {
   ID?: number | bigint | null
   channel_id: number | bigint
   user_id: number | bigint
-  lowest_requested_msg_id: number | null
-  highest_requested_msg_id: number | null
-  unred_msg_id: number | null
+  lowest_requested_msg_id: number | bigint | null
+  highest_requested_msg_id: number | bigint | null
+  unred_msg_id: number | bigint | null
   has_write_access: number
   created_at?: string
   updated_at?: string
@@ -41,9 +41,9 @@ export class ChannelMember {
   id: number | bigint | null
   channelId: number | bigint
   userId: number | bigint
-  lowestRequestedMsgId: number | null
-  highestRequestedMsgId: number | null
-  unredMsgId: number | null
+  lowestRequestedMsgId: number | bigint | null
+  highestRequestedMsgId: number | bigint | null
+  unredMsgId: number | bigint | null
   hasWriteAccess: number
   createdAt: string | null
   updatedAt: string | null
@@ -108,7 +108,7 @@ export class ChannelMember {
       lowest_requested_msg_id = ?, highest_requested_msg_id = ?,
       unred_msg_id = ?,
       has_write_access = ?,
-      updated_at = DateTime('now'),
+      updated_at = DateTime('now')
     WHERE ID = ?;
     `
     const stmt = getDb().prepare(updateQuery)
@@ -192,6 +192,27 @@ export class ChannelMember {
       return null
     }
     return new ChannelMember(row)
+  }
+
+  requestedMsgId(msgId: number | bigint) {
+    if(!this.id) {
+      console.error("error non loaded users can not request msg ids")
+      return
+    }
+    let edited = false
+    if(!this.highestRequestedMsgId || this.highestRequestedMsgId < msgId) {
+      console.log(`user=${this.userId} in channel=${this.channelId} red new message ${msgId}`)
+      this.highestRequestedMsgId = msgId
+      edited = true
+    }
+    if(!this.lowestRequestedMsgId || this.lowestRequestedMsgId > msgId) {
+      console.log(`user=${this.userId} in channel=${this.channelId} scrolled to old ${msgId}`)
+      this.lowestRequestedMsgId = msgId
+      edited = true
+    }
+    if (edited) {
+      this.save()
+    }
   }
 
   channel(): null | Channel {

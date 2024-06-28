@@ -1,4 +1,5 @@
 import { getDb } from "../base/db"
+import { randomBytes } from 'crypto'
 
 type UserColumn = 'ID'
   | 'username'
@@ -21,7 +22,7 @@ export interface IUserConstructor {
   updated_at?: string | null
   is_admin?: 0 | 1
   is_blocked?: 0 | 1
-  token: string | null
+  token?: string | null
 }
 
 export class User {
@@ -181,6 +182,33 @@ export class User {
       return null
     }
     return new User(row)
+  }
+
+  static findByToken(token: string): null | User {
+    const row: undefined | IUserRow = getDb().
+      prepare('SELECT * FROM users WHERE token = ?')
+      .get(token) as undefined | IUserRow
+    if(!row) {
+      return null
+    }
+    return new User(row)
+  }
+
+  getOrCreateToken(): string {
+    if (this.token) {
+      return this.token
+    }
+    // yikes bro
+    while (true) {
+      this.token = randomBytes(22).toString('hex');
+      const conflict = User.findByToken(this.token)
+      if(!conflict) {
+        break
+      }
+      console.log(`WTF?! what are the odds? the token "${this.token}" was already used???`)
+    }
+    this.save()
+    return this.token
   }
 }
 

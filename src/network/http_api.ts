@@ -1,14 +1,16 @@
 // http
 
-import bodyParser from 'body-parser';
-import { Request, Response } from 'express';
-import { getDiscordChannels } from '../features/channels';
-import { getConfig } from '../base/config';
-import { MessageLogOptions, getMessages } from '../history';
-import { getExpress } from './server';
-import { getUsers, logoutUser } from '../session_users';
-import { IrcMessage } from '../socket.io';
-import { onDiscordGetChannelWebhooks, onDiscordWebhookExecute } from '../features/webhooks';
+import bodyParser from 'body-parser'
+import { Request, Response } from 'express'
+import { getDiscordChannels } from '../features/channels'
+import { getConfig } from '../base/config'
+import { MessageLogOptions, getMessages } from '../history'
+import { getExpress } from './server'
+import { getUserBySessionToken, getUsers, logoutUser } from '../session_users'
+import { IrcMessage } from '../socket.io'
+import { onDiscordGetChannelWebhooks, onDiscordWebhookExecute } from '../features/webhooks'
+import { Channel } from '../models/channel'
+import { ChannelMember } from '../models/channel_member'
 const cors = require('cors')
 
 export interface ParamsDictionary {
@@ -34,8 +36,15 @@ type QueryParams = {
   count: string
   search: string
   pattern: string
+  userId: number | bigint
+  sessionToken: string
 }
 getExpress().get('/:server/:channel/messages', (req: Request<ParamsDictionary, {}, {}, QueryParams>, res) => {
+  const sessionUser = getUserBySessionToken(req.query.sessionToken)
+  if (!sessionUser) {
+    res.end(JSON.stringify({error: 'invalid session token'}))
+    return
+  }
   const options: MessageLogOptions = {
     fromId: parseInt(req.query.from, 10) || 0,
     count: parseInt(req.query.count, 10) || 10,
@@ -43,6 +52,23 @@ getExpress().get('/:server/:channel/messages', (req: Request<ParamsDictionary, {
     searchPattern: req.query.pattern || ''
   }
   const messages: IrcMessage[] = getMessages(req.params.server, req.params.channel, options)
+
+  const user = sessionUser.dbUser
+  if (user) {
+    const channel = Channel.findByDiscordNames(req.params.server, req.params.channel)
+    if (!channel) {
+      console.log("warning failed to update last red because channel is not found")
+    } else {
+      const member = ChannelMember.findByUserAndChannel(user.ID, channel.id!)
+      if (!member) {
+        console.log("warning failed to update last red because channel is not found")
+      } else {
+        member.requestedMsgId(messages[0].id)
+        member.requestedMsgId(messages[messages.length-1].id)
+      }
+    }
+  }
+
   res.end(JSON.stringify(messages))
 })
 getExpress().get('/:server/:channel/typers', (req, res) => {

@@ -65,6 +65,13 @@ export const getUserByName = (username: string): SessionUser | null => {
   return Object.values(getUsers()).find((user) => user.loggedIn && user.username === username) || null
 }
 
+export const getUserBySessionToken = (sessionToken: string): SessionUser | null => {
+  if (!sessionToken) {
+    return null
+  }
+  return Object.values(getUsers()).find((user) => user.loggedIn && user.sessionToken === sessionToken) || null
+}
+
 export const getUserBySocket = (socket: Socket): SessionUser | null => {
   return getUsers()[socket.id]
   // return getUsers().find((user) => user.loggedIn && user.socket.id === socket.id) || null
