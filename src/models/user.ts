@@ -9,6 +9,7 @@ type UserColumn = 'ID'
   | 'updated_at'
   | 'is_admin'
   | 'is_blocked'
+  | 'token'
 
 export interface IUserConstructor {
   ID?: number | bigint | null
@@ -20,6 +21,7 @@ export interface IUserConstructor {
   updated_at?: string | null
   is_admin?: 0 | 1
   is_blocked?: 0 | 1
+  token: string | null
 }
 
 export class User {
@@ -32,6 +34,7 @@ export class User {
   updatedAt: string | null
   isAdmin: 0 | 1
   isBlocked: 0 | 1
+  token: string | null
 
   constructor(row: IUserConstructor) {
     this.id = row.ID || null
@@ -43,6 +46,7 @@ export class User {
     this.updatedAt = row.created_at || null
     this.isAdmin = row.is_admin || 0
     this.isBlocked = row.is_blocked || 0
+    this.token = row.token || null
   }
 
   blocked(): boolean {
@@ -63,12 +67,14 @@ export class User {
       username, password,
       register_ip, login_ip,
       created_at, updated_at,
-      is_admin, is_blocked
+      is_admin, is_blocked,
+      token
     ) VALUES (
       ?, ?,
       ?, ?,
       DateTime('now'), DateTime('now'),
-      ?, ?
+      ?, ?,
+      ?
     );
     `
     const stmt = getDb().prepare(insertQuery)
@@ -78,7 +84,8 @@ export class User {
       this.registerIp,
       this.loginIp,
       this.isAdmin,
-      this.isBlocked
+      this.isBlocked,
+      this.token
     )
     this.id = result.lastInsertRowid
   }
@@ -88,7 +95,8 @@ export class User {
     UPDATE users SET
       username = ?, password = ?,
       is_admin = ?, is_blocked = ?,
-      updated_at = DateTime('now')
+      updated_at = DateTime('now'),
+      token = ?
     WHERE ID = ?;
     `
     const stmt = getDb().prepare(insertQuery)
@@ -97,6 +105,7 @@ export class User {
       this.password,
       this.isAdmin,
       this.isBlocked,
+      this.token,
       this.id
     )
   }
@@ -131,11 +140,33 @@ export class User {
     return new User(row)
   }
 
-
   static all (): User[] {
     const rows: undefined | IUserRow[] = getDb().
       prepare('SELECT * FROM users')
       .all() as undefined | IUserRow[]
+    if(!rows) {
+      return []
+    }
+    return rows.map((row) => new User(row))
+  }
+
+  /**
+   * where
+   *
+   * get User instance based on sql where statement
+   * given a custom value and column
+   *
+   * @param column VUNERABLE TO SQL INJECTIONS!!!! THIS SHOULD NEVER BE USER INPUT!
+   * @param value
+   * @returns list of User instances
+   */
+  static where (column: UserColumn, value: number | bigint | string): User[] {
+    if (!/^[a-z_]+$/.test(column)) {
+      throw new Error(`SQL injection prevention. column='${column}' value='${value}'`);
+    }
+    const rows: IUserRow[] = getDb().
+      prepare(`SELECT * FROM channels WHERE ${column} = ?`)
+      .all(value) as IUserRow[]
     if(!rows) {
       return []
     }
@@ -163,5 +194,6 @@ export interface IUserRow {
   created_at: string,
   updated_at: string,
   is_admin: 0 | 1,
-  is_blocked: 0 | 1
+  is_blocked: 0 | 1,
+  token: string | null
 }
