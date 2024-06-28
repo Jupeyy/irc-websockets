@@ -7,7 +7,6 @@ import { WsState } from ".."
 import { ChannelInfo, JoinChannel } from "../socket.io"
 import { Channel } from "../models/channel"
 import { ChannelMember } from "../models/channel_member"
-import { channel } from "diagnostics_channel"
 
 // TODO: we should probably get rid of ChannelMapping
 //       thats just some legacy type that is now wrapping around the
@@ -71,17 +70,20 @@ export const onJoinChannel = (wsState: WsState, join: JoinChannel) => {
       success: false,
       server: join.server,
       channel: join.channel,
+      unredMsgId: null,
       channelId: 0,
       serverId: 0
     })
     return
   }
-  if (!joinChannel(wsState.socket, join.channel, join.server, join.password)) {
+  const member = joinChannel(wsState.socket, join.channel, join.server, join.password)
+  if (!member) {
     wsState.socket.emit('joinChannelResponse', {
       message: 'failed to join channel',
       success: false,
       server: join.server,
       channel: join.channel,
+      unredMsgId: null,
       channelId: channel.id,
       serverId: channel.serverId
     })
@@ -91,33 +93,34 @@ export const onJoinChannel = (wsState: WsState, join: JoinChannel) => {
       success: true,
       server: join.server,
       channel: join.channel,
+      unredMsgId: member.lastRedMsgId(),
       channelId: channel.id,
       serverId: channel.serverId
     })
   }
 }
 
-export const joinChannel = (socket: Socket, discordChannel: string, discordServer: string, _password: string = ''): boolean => {
+export const joinChannel = (socket: Socket, discordChannel: string, discordServer: string, _password: string = ''): ChannelMember | null => {
   const user: SessionUser = getUsers()[socket.id]
   if (!user) {
-    return false
+    return null
   }
   if (!user.loggedIn) {
-    return false
+    return null
   }
   const mapping: ChannelMapping | null = getMappingByDiscord(discordServer, discordChannel)
   if (!mapping) {
     console.log(`[!][join-channel] invalid discord mapping '${discordServer}#${discordChannel}'`)
-    return false
+    return null
   }
   const channel: Channel | null = Channel.findByDiscordNames(discordServer, discordChannel)
   if (!channel) {
     console.log(`[!][join-channel] channel not found in database '${discordServer}#${discordChannel}'`)
-    return false
+    return null
   }
   if (!user.dbUser) {
     console.log(`[!][join-channel] user='${user.username}' failed to join ${discordServer}#${discordChannel}' (user not found in database)`)
-    return false
+    return null
   }
   let member: ChannelMember | null = ChannelMember.findByUserAndChannel(user.dbUser.ID, channel.id!)
   if (!member) {
@@ -140,7 +143,7 @@ export const joinChannel = (socket: Socket, discordChannel: string, discordServe
     })
     if(!member.insert()) {
       console.log(`[!][join-channel] user='${user.username}' failed to create membership for '${discordServer}#${discordChannel}'`)
-      return false
+      return null
     }
     console.log(`[!][join-channel] user='${user.username}' joined channel '${discordServer}#${discordChannel}'`)
   } else {
@@ -158,5 +161,5 @@ export const joinChannel = (socket: Socket, discordChannel: string, discordServe
   socket.join(socket.id)
   socket.join(getChannelUid(mapping)) // channel speficic for "is typing" messages
   socket.join(discordServer) // server specific for chat messages from all channels
-  return true
+  return member
 }

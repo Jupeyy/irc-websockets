@@ -215,4 +215,11 @@ export class ChannelMember {
     }
     return channel.server()
   }
+
+  lastRedMsgId(): number | bigint | null {
+    if (this.unredMsgId) {
+      this.unredMsgId
+    }
+    return this.highestRequestedMsgId
+  }
 }
