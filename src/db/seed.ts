@@ -2,6 +2,7 @@ import { Webhook } from "../models/webhook";
 import { Channel } from "../models/channel";
 import { User } from "../models/user";
 import { Server } from "../models/server";
+import { ChannelMember } from "../models/channel_member";
 
 require('dotenv').config()
 
@@ -155,6 +156,20 @@ const developer = new Channel({
   owner_id: 0
 })
 developer.insert()
+
+const chillerInDeveloper = new ChannelMember({
+  channel_id: developer.id!,
+  user_id: chiller.id!,
+  lowest_requested_msg_id: null,
+  highest_requested_msg_id: null,
+  unred_msg_id: null,
+  has_write_access: 1,
+})
+chillerInDeveloper.insert()
+if(ChannelMember!.first()!.user()!.username != 'ChillerDragon') {
+  console.log('failed to create channel member')
+  process.exit(1)
+}
 
 const offtopic = new Channel({
   name: 'off-topic',

@@ -46,7 +46,7 @@ replServer.context.getDb = db.getDb
 const files = readdirSync(path.join(__dirname, '../src/models/')).filter((e) => /\.ts$/.test(e)).map((e) => e.split('.')[0])
 files.forEach((model) => {
   import(`../src/models/${model}`).then((module) => {
-    const camel = `${model[0].toUpperCase()}${model.substring(1)}`
+    const camel = model.split('_').map((w) => `${w[0].toUpperCase()}${w.substring(1).toLowerCase()}`).join('')
     replServer.context[camel] = module[camel]
   })
 })
