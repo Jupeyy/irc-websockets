@@ -6,6 +6,8 @@ import { sendTyping } from "./typing"
 import { WsState } from ".."
 import { ChannelInfo, JoinChannel } from "../socket.io"
 import { Channel } from "../models/channel"
+import { ChannelMember } from "../models/channel_member"
+import { channel } from "diagnostics_channel"
 
 // TODO: we should probably get rid of ChannelMapping
 //       thats just some legacy type that is now wrapping around the
@@ -108,6 +110,39 @@ export const joinChannel = (socket: Socket, discordChannel: string, discordServe
     console.log(`[!][join-channel] invalid discord mapping '${discordServer}#${discordChannel}'`)
     return false
   }
+  const channel: Channel | null = Channel.findByDiscordNames(discordServer, discordChannel)
+  if (!channel) {
+    console.log(`[!][join-channel] channel not found in database '${discordServer}#${discordChannel}'`)
+    return false
+  }
+  if (!user.dbUser) {
+    console.log(`[!][join-channel] user='${user.username}' failed to join ${discordServer}#${discordChannel}' (user not found in database)`)
+    return false
+  }
+  let member: ChannelMember | null = ChannelMember.findByUserAndChannel(user.dbUser.ID, channel.id!)
+  if (!member) {
+    console.log(`[!][join-channel] user='${user.username}' is not member of '${discordServer}#${discordChannel}'`)
+    if(channel.isPrivate) {
+      console.log(`[!][join-channel] user='${user.username}' failed to join private channel '${discordServer}#${discordChannel}'`)
+      return false
+    }
+    member = new ChannelMember({
+      channel_id: channel.id!,
+      user_id: user.dbUser.ID,
+      lowest_requested_msg_id: null,
+      highest_requested_msg_id: null,
+      unred_msg_id: null,
+      has_write_access: 1,
+    })
+    if(!member.insert()) {
+      console.log(`[!][join-channel] user='${user.username}' failed to create membership for '${discordServer}#${discordChannel}'`)
+      return false
+    }
+    console.log(`[!][join-channel] user='${user.username}' joined channel '${discordServer}#${discordChannel}'`)
+  } else {
+    console.log(`[!][join-channel] user='${user.username}' visited channel with old membership '${discordServer}#${discordChannel}'`)
+  }
+
   sendTyping(user, false, user.activeServer, user.activeChannel)
   user.activeChannel = discordChannel
   user.activeServer = discordServer

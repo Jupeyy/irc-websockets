@@ -143,7 +143,7 @@ export class ChannelMember {
 
   static last (): null | ChannelMember {
     const row: undefined | IChannelMemberRow = getDb().
-      prepare('SELECT * FROM channel_member ORDER BY ID DESC LIMIT 1')
+      prepare('SELECT * FROM channel_members ORDER BY ID DESC LIMIT 1')
       .get() as undefined | IChannelMemberRow
     if(!row) {
       return null
@@ -153,7 +153,7 @@ export class ChannelMember {
 
   static all (): ChannelMember[] {
     const rows: undefined | IChannelMemberRow[] = getDb().
-      prepare('SELECT * FROM channel_member')
+      prepare('SELECT * FROM channel_members')
       .all() as undefined | IChannelMemberRow[]
     if(!rows) {
       return []
@@ -182,6 +182,16 @@ export class ChannelMember {
       return []
     }
     return rows.map((row) => new ChannelMember(row))
+  }
+
+  static findByUserAndChannel (userId: number | bigint, channelId: number | bigint): null | ChannelMember {
+    const row: undefined | IChannelMemberRow = getDb().
+      prepare('SELECT * FROM channel_members WHERE user_id = ? AND channel_id = ?')
+      .get(userId, channelId) as undefined | IChannelMemberRow
+    if(!row) {
+      return null
+    }
+    return new ChannelMember(row)
   }
 
   channel(): null | Channel {
