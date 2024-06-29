@@ -8,6 +8,14 @@ CREATE TABLE IF NOT EXISTS users(
   updated_at  TEXT        NOT NULL,
   is_admin    INTEGER     NOT NULL DEFAULT 0,
   is_blocked  INTEGER     NOT NULL DEFAULT 0,
-  token       TEXT        UNIQUE -- full account access used by front end for http requests
+  -- full account access used by front end for http requests
+  -- not to be confused with the sessionToken which expires
+  -- when the websocket connection dies
+  -- as of right now this permanent full access token is unused
+  -- and the front end uses the session token for the http requests
+  -- but in the future this token should also work for
+  -- http requests
+  -- it will come in handy for external clients, bots, weebooks and so on i think ...
+  token       TEXT        UNIQUE
 );
 

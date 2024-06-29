@@ -65,6 +65,10 @@ export const getUserByName = (username: string): SessionUser | null => {
   return Object.values(getUsers()).find((user) => user.loggedIn && user.username === username) || null
 }
 
+// finds user by sessionToken which lives in js ram
+// NOT by user account token which lives in the db
+// the returned user will have a active websocket connection
+// but might not be logged in to a real account
 export const getUserBySessionToken = (sessionToken: string): SessionUser | null => {
   if (!sessionToken) {
     return null
