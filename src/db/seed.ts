@@ -3,6 +3,8 @@ import { Channel } from "../models/channel";
 import { User } from "../models/user";
 import { Server } from "../models/server";
 import { ChannelMember } from "../models/channel_member";
+import { Friend } from "../models/friend";
+import { assert } from "console";
 
 require('dotenv').config()
 
@@ -33,6 +35,12 @@ const user = new User({
   register_ip: '127.0.0.1'
 })
 user.insert()
+
+new Friend({
+  user_a_id: chiller.id!,
+  user_b_id: user.id!
+}).insert()
+assert(chiller.friends().length === 1)
 
 const qshar = new User({
   username: 'QshaR_seed',

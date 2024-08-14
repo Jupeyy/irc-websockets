@@ -1,5 +1,6 @@
 import { getDb } from "../base/db"
 import { randomBytes } from 'crypto'
+import { Friend } from "./friend"
 
 type UserColumn = 'ID'
   | 'username'
@@ -209,6 +210,20 @@ export class User {
     }
     this.save()
     return this.token
+  }
+
+  friends(): User[] {
+    if (!this.id) {
+      return []
+    }
+    const friends: User[] = []
+    Friend.whereUserId(this.id).forEach((friendship) => {
+      const friend = friendship.other(this)
+      if(friend) {
+        friends.push(friend)
+      }
+    })
+    return friends
   }
 }
 

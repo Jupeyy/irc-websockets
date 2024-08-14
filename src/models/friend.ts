@@ -136,6 +136,16 @@ export class Friend {
     return rows.map((row) => new Friend(row))
   }
 
+  static whereUserId (userId: number | bigint | string): Friend[] {
+    const rows: IFriendRow[] = getDb().
+      prepare(`SELECT * FROM friends WHERE user_a_id = ? or user_b_id = ?`)
+      .all(userId, userId) as IFriendRow[]
+    if(!rows) {
+      return []
+    }
+    return rows.map((row) => new Friend(row))
+  }
+
   userA(): null | User {
     if(!this.id) {
       return null
@@ -174,10 +184,10 @@ export class Friend {
     if(users.length !== 2) {
       return null
     }
-    if(!users.find((u) => u === user)) {
+    if(!users.find((u) => u.id === user.id)) {
       return null
     }
-    const others = users.filter((u) => u !== user)
+    const others = users.filter((u) => u.id !== user.id)
     if(others.length !== 1) {
       return null
     }
