@@ -53,7 +53,7 @@ export class Friend {
 
   insert (): Friend | boolean {
     const insertQuery = `
-    INSERT INTO friend(
+    INSERT INTO friends(
       user_a_id, user_b_id,
       created_at, updated_at
     ) VALUES (

@@ -125,7 +125,6 @@ export class Channel {
   insert (): Channel | boolean {
     if (!this.valid()) {
       throw Error(this.errors.join(','))
-      return false
     }
     const insertQuery = `
     INSERT INTO channels(
@@ -157,6 +156,9 @@ export class Channel {
   }
 
   update (): void {
+    if (!this.valid()) {
+      throw Error(this.errors.join(','))
+    }
     const updateQuery = `
     UPDATE channels SET
       name = ?, description = ?,
