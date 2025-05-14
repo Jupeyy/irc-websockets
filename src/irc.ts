@@ -4,6 +4,7 @@ import { activeIrcChannels, ChannelMapping } from './features/channels'
 import { getNextMessageId } from './history'
 import { addMessage } from './features/messages'
 import { IrcMessage } from './socket.io'
+import { getConfig } from './base/config'
 
 if (!process.env.IRC_SERVER) {
 	console.log('Error: IRC_SERVER is not set! check your .env file')
@@ -39,7 +40,7 @@ class MockIrcClient {
 }
 
 const getIrcClient = (): irc.Client => {
-  if(process.env.DRY_IRC) {
+  if(getConfig().dryIrc) {
     return new MockIrcClient('mock', 'mock') as irc.Client
   }
   return new irc.Client(process.env.IRC_SERVER as string, 'ws-client', {

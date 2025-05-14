@@ -6,10 +6,12 @@ const isTrue = (envbool: string) => {
 
 interface Config {
   requirePasswords: boolean
+  dryIrc: boolean
 }
 
 const config: Config = {
-  requirePasswords: isTrue(process.env.ACCOUNTS || '0')
+  requirePasswords: isTrue(process.env.ACCOUNTS || '0'),
+  dryIrc: isTrue(process.env.DRY_IRC || '0')
 }
 
 export const getConfig = (): Config => {
