@@ -1,4 +1,4 @@
-import irc = require('irc')
+import irc = require('matrix-org-irc')
 import { getConnectedIrcChannels } from './bridge_connections'
 import { activeIrcChannels, ChannelMapping } from './features/channels'
 import { getNextMessageId } from './history'
