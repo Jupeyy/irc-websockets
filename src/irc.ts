@@ -49,6 +49,7 @@ const getIrcClient = (): irc.Client => {
 }
 
 const client = getIrcClient()
+let sentLogin = false
 
 export const sendIrc = (ircServer: string, ircChannel: string, message: string): boolean => {
   if (ircServer !== 'quakenet') {
@@ -60,13 +61,37 @@ export const sendIrc = (ircServer: string, ircChannel: string, message: string):
 }
 
 client.addListener('error', (message) => {
-  console.log('error: ', message)
+  console.error('[-][irc] error: ', message)
 })
+
+client.addListener('join', (channel, name) => {
+  console.log(`[*][irc] '${name}' joined '${channel}'`)
+
+  if(!sentLogin) {
+    sentLogin = true
+
+    if (!process.env.IRC_LOGIN_MSG) {
+      console.log('[!][irc] IRC_LOGIN_MSG not set will not login')
+      return
+    }
+
+    console.log('[*][irc] sending login ...')
+    client.say(channel, process.env.IRC_LOGIN_MSG)
+  }
+})
+
+// client.addListener('pm', (name, message) => {
+//     console.log(`[*][irc][pm] <${name}> ${message}`)
+// })
+
+// client.addListener('message', (from, to, message) => {
+//     console.log(`[*][irc][m] '${from}' -> '${to}: ${message}`)
+// })
 
 getConnectedIrcChannels().forEach((connection: ChannelMapping) => {
   console.log(`[*] adding irc listener for channel ${connection.irc.channel}`)
   client.addListener(`message#${connection.irc.channel}`, (from, message) => {
-    console.log(from + ` => #${connection.irc.channel}: ` + message)
+    console.log(`[*][irc] ${from} => #${connection.irc.channel}: ${message}`)
     const ircMessage: IrcMessage = {
       id: getNextMessageId(),
       from: from,
