@@ -34,7 +34,7 @@ export const onMessage = (wsState: WsState, message: IrcMessage) => {
     console.log(`[!] user '${user.username}' tried to send in server '${message.server}' but is in server '${user.activeServer}'`)
     return
   }
-  const messageStr = `<**${message.from}**> ${message.message}`
+  const messageStr = `**<${message.from}>** ${message.message}`
   console.log(`[*][${message.server}][${message.channel}] ${messageStr}`)
   const mapping: ChannelMapping | null = getMappingByDiscord(message.server, message.channel)
   if (!mapping) {
