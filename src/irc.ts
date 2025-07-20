@@ -74,19 +74,23 @@ client.addListener('join', (channel, name) => {
       console.log('[!][irc] IRC_LOGIN_MSG not set will not login')
       return
     }
+    if (!process.env.IRC_LOGIN_CHANNEL) {
+      console.log('[!][irc] IRC_LOGIN_CHANNEL not set will not login')
+      return
+    }
 
-    console.log('[*][irc] sending login ...')
-    client.say(channel, process.env.IRC_LOGIN_MSG)
+    console.log(`[*][irc] sending login to channel '${process.env.IRC_LOGIN_CHANNEL}' ...`)
+    client.say(process.env.IRC_LOGIN_CHANNEL, process.env.IRC_LOGIN_MSG)
   }
 })
 
-// client.addListener('pm', (name, message) => {
-//     console.log(`[*][irc][pm] <${name}> ${message}`)
-// })
+client.addListener('pm', (name, message) => {
+    console.log(`[*][irc][pm] <${name}> ${message}`)
+})
 
-// client.addListener('message', (from, to, message) => {
-//     console.log(`[*][irc][m] '${from}' -> '${to}: ${message}`)
-// })
+client.addListener('message', (from, to, message) => {
+    console.log(`[*][irc][m] '${from}' -> '${to}: ${message}`)
+})
 
 getConnectedIrcChannels().forEach((connection: ChannelMapping) => {
   console.log(`[*] adding irc listener for channel ${connection.irc.channel}`)
