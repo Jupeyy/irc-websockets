@@ -4,16 +4,24 @@ A websockets wrapper around a irc client.
 
 Can be used as a backend for a javascript front end for irc clients.
 
+Rust rewrite
+
+This repository now includes a Rust implementation in `rust/`.
+
+Run the server
 ```
-npm install
-npm run start
+cargo run --bin irc-websockets
+```
+
+Run database migrations (equivalent to `npm run db migrate`)
+```
+cargo run --bin db-cli -- migrate
 ```
 
 Update to get new db schema
 ```
 git pull
-npm i
-npm run db migrate
+cargo run --bin db-cli -- migrate
 ```
 
 [Example client implementation](https://github.com/ChillerDragon/discord-irc/commit/9203d05af36485fff627a0dd5547f4be2e3dca89)
